@@ -36,6 +36,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+auth = [
+    "python-jose[cryptography]>=3.3.0",
+    "httpx>=0.24.0",
+]
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
@@ -45,6 +49,7 @@ dev = [
     "ruff>=0.1.0",
     "mypy>=1.0.0",
     "types-PyYAML>=6.0.0",
+    "python-jose[cryptography]>=3.3.0",
 ]
 
 [project.urls]

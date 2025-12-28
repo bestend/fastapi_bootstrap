@@ -49,6 +49,18 @@ pip install fastapi-kit
 
 ## 🚀 빠른 시작
 
+완전한 예제는 [examples/](./examples/) 디렉토리를 참조하세요.
+
+### 간단한 예제
+
+```bash
+# 예제 실행
+python examples/simple/app.py
+
+# 접속
+http://localhost:8000/v1/docs
+```
+
 ### 기본 사용법
 
 ```python
@@ -306,6 +318,53 @@ app = create_app(
 
 ---
 
+## 📚 예제
+
+[examples/](./examples/) 디렉토리에서 완전하고 실행 가능한 예제를 확인할 수 있습니다:
+
+### 1. [Simple Example](./examples/simple/)
+로깅, 응답 형식화, 페이지네이션을 포함한 기본 사용법.
+
+```bash
+python examples/simple/app.py
+# http://localhost:8000/v1/docs 접속
+```
+
+### 2. [Auth Example](./examples/auth/)
+역할 기반 접근 제어를 포함한 OIDC/Keycloak 인증.
+
+```bash
+# 환경 변수 설정
+export OIDC_ISSUER="https://keycloak.example.com/realms/myrealm"
+export OIDC_CLIENT_ID="my-api"
+
+python examples/auth/app.py
+# http://localhost:8000/v1/docs 접속
+```
+
+### 3. [CORS Example](./examples/cors/)
+환경별 CORS 설정 및 보안 모범 사례.
+
+```bash
+# 개발 환경
+python examples/cors/app.py
+
+# 프로덕션 환경
+STAGE=prod ALLOWED_ORIGINS="https://myapp.com" python examples/cors/app.py
+```
+
+### 4. [External Auth Example](./examples/external_auth/)
+API Gateway/Ingress 인증 및 Swagger UI Bearer token 지원.
+
+```bash
+python examples/external_auth/app.py
+# http://localhost:8000/docs 접속
+```
+
+자세한 내용은 [examples/README.md](./examples/README.md)를 참조하세요.
+
+---
+
 ## 🤝 기여하기
 
 기여는 환영합니다! Pull Request를 자유롭게 제출해 주세요.
@@ -324,13 +383,5 @@ app = create_app(
 - [FastAPI](https://fastapi.tiangolo.com/)로 구축 - 현대적이고 빠른 웹 프레임워크
 - [Loguru](https://github.com/Delgan/loguru)로 로깅 - 간단한 Python 로깅
 
----
 
-<div align="center">
-
-**[@bestend](https://github.com/bestend)가 ❤️로 만들었습니다**
-
-이 프로젝트가 도움이 되었다면 ⭐️를 주세요!
-
-</div>
 

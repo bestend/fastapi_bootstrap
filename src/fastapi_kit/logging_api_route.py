@@ -82,7 +82,10 @@ class LoggingAPIRoute(APIRoute):
 
     @staticmethod
     def _has_json_body(request: Request) -> bool:
-        return bool(request.method in ("POST", "PUT", "PATCH") and request.headers.get("content-type") == "application/json")
+        return bool(
+            request.method in ("POST", "PUT", "PATCH")
+            and request.headers.get("content-type") == "application/json"
+        )
 
     async def _request_logging(self, request: Request):
         if self._has_json_body(request):

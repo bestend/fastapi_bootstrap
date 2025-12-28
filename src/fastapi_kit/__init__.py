@@ -37,13 +37,31 @@ from fastapi_kit.exception.handler import add_exception_handler
 from .base import create_app
 from .log import get_logger
 from .logging_api_route import LoggingAPIRoute
+from .response import ResponseFormatter
 from .type import BaseModel
 
-__version__ = "0.0.dev"
+# Auth module (optional dependencies)
+try:
+    from .auth import OIDCAuth, OIDCConfig, TokenPayload
 
-__all__ = [
-    "BaseModel",
-    "LoggingAPIRoute",
-    "create_app",
-    "get_logger",
-]
+    __all__ = [
+        "BaseModel",
+        "LoggingAPIRoute",
+        "OIDCAuth",
+        "OIDCConfig",
+        "ResponseFormatter",
+        "TokenPayload",
+        "create_app",
+        "get_logger",
+    ]
+except ImportError:
+    # Auth dependencies not installed
+    __all__ = [
+        "BaseModel",
+        "LoggingAPIRoute",
+        "ResponseFormatter",
+        "create_app",
+        "get_logger",
+    ]
+
+__version__ = "0.0.dev"

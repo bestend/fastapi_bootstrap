@@ -1,0 +1,99 @@
+# FastAPI Kit Examples
+
+## Examples
+
+### [Simple](./simple/) - Basic Usage
+
+```bash
+python examples/simple/app.py
+```
+
+Logging, standardized responses, pagination
+
+### [Auth](./auth/) - OIDC Authentication
+
+```bash
+export OIDC_ISSUER="..." OIDC_CLIENT_ID="..."
+python examples/auth/app.py
+```
+
+Keycloak/Auth0 integration, role-based access control
+
+### [CORS](./cors/) - CORS Configuration
+
+```bash
+python examples/cors/app.py  # dev
+STAGE=prod ALLOWED_ORIGINS="https://myapp.com" python examples/cors/app.py  # prod
+```
+
+Environment-specific CORS settings
+
+### [External Auth](./external_auth/) - External Authentication
+
+```bash
+python examples/external_auth/app.py
+```
+
+API Gateway/Ingress authentication, Swagger UI Bearer token support
+
+---
+
+## Quick Reference
+
+### Basic App
+
+```python
+from fastapi_kit import create_app
+
+app = create_app([router], title="My API", prefix_url="/v1")
+```
+
+### Auto Logging
+
+```python
+from fastapi_kit import LoggingAPIRoute
+
+router = APIRouter(route_class=LoggingAPIRoute)
+```
+
+### Standard Responses
+
+```python
+from fastapi_kit import ResponseFormatter
+
+return ResponseFormatter.success(data={...})
+return ResponseFormatter.paginated(data=[...], page=1, page_size=10, total_items=100)
+```
+
+### OIDC Auth
+
+```python
+from fastapi_kit import OIDCAuth, OIDCConfig
+
+config = OIDCConfig(issuer="...", client_id="...")
+auth = OIDCAuth(config)
+
+@router.get("/me")
+async def get_me(user = Depends(auth.get_current_user)):
+    return {"email": user.email}
+```
+
+### CORS
+
+```python
+app = create_app(
+    [router],
+    stage="prod",
+    cors_origins=["https://myapp.com"]
+)
+```
+
+### External Auth (API Gateway)
+
+```python
+app = create_app(
+    [router],
+    add_external_basic_auth=True,  # Add Bearer auth to Swagger
+)
+```
+

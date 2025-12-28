@@ -49,6 +49,20 @@ pip install fastapi-kit
 
 ## 🚀 Quick Start
 
+See [examples/](./examples/) directory for complete, runnable examples.
+
+### Simple Example
+
+```bash
+# Run the example
+python examples/simple/app.py
+
+# Visit
+http://localhost:8000/v1/docs
+```
+
+### Basic Usage
+
 ### Basic Usage
 
 ```python
@@ -128,6 +142,8 @@ The main function to create a FastAPI application with all features enabled.
 - `version`: API version
 - `prefix_url`: URL prefix for all routes
 - `graceful_timeout`: Seconds to wait before shutdown (default: 10)
+  - Set to `0` for instant shutdown (recommended for dev)
+  - Set to `10-30` for production (allows in-flight requests to complete)
 - `docs_enable`: Enable/disable API documentation (default: True)
 - `health_check_api`: Health check endpoint path (default: "/healthz")
 - `startup_coroutines`: List of async functions to run on startup
@@ -306,6 +322,53 @@ app = create_app(
 
 ---
 
+## 📚 Examples
+
+Complete, runnable examples are available in the [examples/](./examples/) directory:
+
+### 1. [Simple Example](./examples/simple/)
+Basic usage with logging, response formatting, and pagination.
+
+```bash
+python examples/simple/app.py
+# Visit http://localhost:8000/v1/docs
+```
+
+### 2. [Auth Example](./examples/auth/)
+OIDC/Keycloak authentication with role-based access control.
+
+```bash
+# Set up environment
+export OIDC_ISSUER="https://keycloak.example.com/realms/myrealm"
+export OIDC_CLIENT_ID="my-api"
+
+python examples/auth/app.py
+# Visit http://localhost:8000/v1/docs
+```
+
+### 3. [CORS Example](./examples/cors/)
+Environment-specific CORS configuration and security best practices.
+
+```bash
+# Development
+python examples/cors/app.py
+
+# Production
+STAGE=prod ALLOWED_ORIGINS="https://myapp.com" python examples/cors/app.py
+```
+
+### 4. [External Auth Example](./examples/external_auth/)
+API Gateway/Ingress authentication with Swagger UI Bearer token support.
+
+```bash
+python examples/external_auth/app.py
+# Visit http://localhost:8000/docs
+```
+
+See [examples/README.md](./examples/README.md) for detailed documentation.
+
+---
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -324,13 +387,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Built with [FastAPI](https://fastapi.tiangolo.com/) - Modern, fast web framework
 - Logging powered by [Loguru](https://github.com/Delgan/loguru) - Python logging made simple
 
----
 
-<div align="center">
-
-**Made with ❤️ by [@bestend](https://github.com/bestend)**
-
-If this project helped you, please give it a ⭐️!
-
-</div>
 
