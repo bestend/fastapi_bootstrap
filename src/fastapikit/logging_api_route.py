@@ -121,7 +121,7 @@ class LoggingAPIRoute(APIRoute):
     async def extract_request_info(self, request: Request):
         return {
             "uri": request.scope["path"],
-            "path": get_path_with_query_string(request.scope),
+            "path": get_path_with_query_string(request.scope),  # type: ignore[arg-type]
             "method": request.scope["method"],
             "client_ip": get_client_ip(request),
         }

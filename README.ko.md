@@ -8,7 +8,7 @@
 
 **Language:** 한국어 | [English](./README.md)
 
-[![Python Version](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org/downloads/)
+[![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Status](https://img.shields.io/badge/status-alpha-yellow)](https://github.com/bestend/fastapikit)
 [![Tests](https://github.com/bestend/fastapikit/actions/workflows/tests.yml/badge.svg)](https://github.com/bestend/fastapikit/actions/workflows/tests.yml)

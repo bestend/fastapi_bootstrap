@@ -4,7 +4,6 @@ This module provides the main `create_app()` function that creates a fully
 configured FastAPI application with logging, error handling, CORS, and more.
 """
 
-from __future__ import annotations
 
 import asyncio
 import logging

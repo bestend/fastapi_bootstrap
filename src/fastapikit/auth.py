@@ -5,7 +5,6 @@ Auth0, Google, etc. It handles token validation, user info extraction, and
 dependency injection for protected routes.
 """
 
-from __future__ import annotations
 
 import time
 from collections.abc import Callable
@@ -101,7 +100,7 @@ class TokenPayload(BaseModel):
     raw: dict[str, Any] = Field(default_factory=dict, description="Raw token payload")
 
     @classmethod
-    def from_jwt(cls, payload: dict[str, Any]) -> TokenPayload:
+    def from_jwt(cls, payload: dict[str, Any]) -> "TokenPayload":
         """Create TokenPayload from JWT payload.
 
         Args:

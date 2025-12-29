@@ -7,7 +7,7 @@ name = "fastapikit"
 version = "0.0.dev"  # Auto-updated by GitHub Actions when tag is pushed
 description = "🚀 Easy FastAPI Setup Kit - Production-ready FastAPI boilerplate with logging, error handling, and more"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 license = {text = "MIT"}
 authors = [
     {name = "JunSeok Kim", email = "infend@gmail.com"}
@@ -18,9 +18,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Framework :: FastAPI",
@@ -79,7 +76,7 @@ ignore = [
 ]
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.12"
 warn_return_any = false
 warn_unused_configs = true
 disallow_untyped_defs = false

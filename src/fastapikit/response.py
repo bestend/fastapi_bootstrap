@@ -5,10 +5,9 @@ across all endpoints. It ensures that all responses follow a standard structure,
 making it easier for clients to parse and handle responses.
 """
 
-from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any, Generic, TypeVar
+from datetime import UTC, datetime
+from typing import Any, TypeVar
 
 from pydantic import Field
 
@@ -18,7 +17,7 @@ from fastapikit.type import BaseModel
 T = TypeVar("T")
 
 
-class SuccessResponse(BaseModel, Generic[T]):
+class SuccessResponse[T](BaseModel):
     """Standard success response format.
 
     All successful API responses should follow this format for consistency.
@@ -58,7 +57,7 @@ class SuccessResponse(BaseModel, Generic[T]):
     data: T = Field(description="Response data")
     message: str = Field(default="Success", description="Success message")
     timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
         description="ISO 8601 formatted timestamp",
     )
 
@@ -117,12 +116,12 @@ class ErrorResponse(BaseModel):
     success: bool = Field(default=False, description="Indicates error response")
     error: ErrorDetail = Field(description="Error details")
     timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
         description="ISO 8601 formatted timestamp",
     )
 
 
-class PaginatedResponse(BaseModel, Generic[T]):
+class PaginatedResponse[T](BaseModel):
     """Paginated response format.
 
     Used for endpoints that return paginated data.
@@ -150,7 +149,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
     pagination: PaginationMeta = Field(description="Pagination metadata")
     message: str = Field(default="Success", description="Success message")
     timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
         description="ISO 8601 formatted timestamp",
     )
 
