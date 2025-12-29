@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">🚀 FastAPI Kit</h1>
+  <h1 align="center">🚀 FastAPI Bootstrap</h1>
 </p>
 
 <div align="center">
@@ -10,8 +10,8 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Status](https://img.shields.io/badge/status-alpha-yellow)](https://github.com/bestend/fastapikit)
-[![Tests](https://github.com/bestend/fastapikit/actions/workflows/tests.yml/badge.svg)](https://github.com/bestend/fastapikit/actions/workflows/tests.yml)
+[![Status](https://img.shields.io/badge/status-alpha-yellow)](https://github.com/bestend/fastapi_bootstrap)
+[![Tests](https://github.com/bestend/fastapi_bootstrap/actions/workflows/tests.yml/badge.svg)](https://github.com/bestend/fastapi_bootstrap/actions/workflows/tests.yml)
 
 </div>
 
@@ -19,9 +19,9 @@
 
 ## ✨ Overview
 
-**FastAPI Kit** is a production-ready FastAPI boilerplate that includes everything you need to build robust APIs quickly. It provides pre-configured logging, error handling, request/response tracking, and more out of the box.
+**FastAPI Bootstrap** is a production-ready FastAPI boilerplate that includes everything you need to build robust APIs quickly. It provides pre-configured logging, error handling, request/response tracking, and more out of the box.
 
-Stop writing the same boilerplate code for every FastAPI project. Start building features immediately with FastAPI Kit.
+Stop writing the same boilerplate code for every FastAPI project. Start building features immediately with FastAPI Bootstrap.
 
 ---
 
@@ -42,7 +42,7 @@ Stop writing the same boilerplate code for every FastAPI project. Start building
 ## 📦 Installation
 
 ```bash
-pip install fastapikit
+pip install fastapi_bootstrap
 ```
 
 ---
@@ -66,7 +66,7 @@ http://localhost:8000/v1/docs
 
 ```python
 from fastapi import APIRouter
-from fastapikit import create_app, LoggingAPIRoute
+from fastapi_bootstrap import create_app, LoggingAPIRoute
 
 # Create your API router
 router = APIRouter(route_class=LoggingAPIRoute)
@@ -93,7 +93,7 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 
 ```python
 from fastapi import APIRouter, Depends
-from fastapikit import create_app, LoggingAPIRoute, get_logger
+from fastapi_bootstrap import create_app, LoggingAPIRoute, get_logger
 
 logger = get_logger()
 
@@ -155,7 +155,7 @@ Enhanced APIRoute class that automatically logs all requests and responses with 
 
 ```python
 from fastapi import APIRouter
-from fastapikit import LoggingAPIRoute
+from fastapi_bootstrap import LoggingAPIRoute
 
 router = APIRouter(route_class=LoggingAPIRoute)
 ```
@@ -165,7 +165,7 @@ router = APIRouter(route_class=LoggingAPIRoute)
 Get a pre-configured Loguru logger instance.
 
 ```python
-from fastapikit import get_logger
+from fastapi_bootstrap import get_logger
 
 logger = get_logger()
 logger.info("Application started")
@@ -177,7 +177,7 @@ logger.error("Something went wrong")
 Enhanced Pydantic BaseModel with sensible defaults.
 
 ```python
-from fastapikit import BaseModel
+from fastapi_bootstrap import BaseModel
 
 class UserRequest(BaseModel):
     name: str
@@ -190,7 +190,7 @@ class UserRequest(BaseModel):
 Automatic exception handling with customizable error responses.
 
 ```python
-from fastapikit.exception import BadRequestHeaderError, InvalidAccessTokenError
+from fastapi_bootstrap.exception import BadRequestHeaderError, InvalidAccessTokenError
 
 # Raise custom exceptions
 raise BadRequestHeaderError("Invalid header format")
@@ -217,7 +217,7 @@ export CONFIG_FILE=config.yaml     # Configuration file path
 
 ## 📝 Logging Features
 
-FastAPI Kit includes advanced logging capabilities:
+FastAPI Bootstrap includes advanced logging capabilities:
 
 - **Structured Logging**: JSON or pretty-formatted logs
 - **Request/Response Logging**: Automatic logging of all API calls
@@ -255,7 +255,7 @@ pip install -e ".[dev]"
 pytest tests/
 
 # Run with coverage
-pytest tests/ --cov=fastapikit --cov-report=html
+pytest tests/ --cov=fastapi_bootstrap --cov-report=html
 ```
 
 ---
@@ -264,8 +264,8 @@ pytest tests/ --cov=fastapikit --cov-report=html
 
 ```bash
 # Clone the repository
-git clone https://github.com/bestend/fastapikit.git
-cd fastapikit
+git clone https://github.com/bestend/fastapi_bootstrap.git
+cd fastapi_bootstrap
 
 # Install in development mode
 pip install -e ".[dev]"
@@ -287,7 +287,7 @@ mypy src/
 ### Custom Exception Handlers
 
 ```python
-from fastapikit.exception import ErrorInfo, get_exception_definitions
+from fastapi_bootstrap.exception import ErrorInfo, get_exception_definitions
 
 # Add custom exception
 class CustomError(Exception):

@@ -1,12 +1,12 @@
-"""Simple example of using FastAPI Kit.
+"""Simple example of using FastAPI Bootstrap.
 
-This example shows the basic usage of FastAPI Kit with minimal configuration.
+This example shows the basic usage of FastAPI Bootstrap with minimal configuration.
 """
 
 import uvicorn
 from fastapi import APIRouter
 
-from fastapikit import LoggingAPIRoute, ResponseFormatter, create_app, get_logger
+from fastapi_bootstrap import LoggingAPIRoute, ResponseFormatter, create_app, get_logger
 
 # Create logger
 logger = get_logger()
@@ -81,7 +81,7 @@ async def create_user(name: str, email: str):
 # Create FastAPI app with all features
 app = create_app(
     api_list=[router],
-    title="FastAPI Kit Demo",
+    title="FastAPI Bootstrap Demo",
     version="1.0.0",
     prefix_url="/v1",
     docs_enable=True,

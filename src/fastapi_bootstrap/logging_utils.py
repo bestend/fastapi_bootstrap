@@ -12,8 +12,8 @@ from opentelemetry.trace import (
     get_tracer_provider,
 )
 
-from fastapikit.log import truncate_strings_in_structure
-from fastapikit.util import str2bool
+from fastapi_bootstrap.log import truncate_strings_in_structure
+from fastapi_bootstrap.util import str2bool
 
 LOG_STRING_LENGTH = int(os.environ.get("LOG_STRING_LENGTH", "5000"))
 LOG2JSON = str2bool(os.environ.get("LOG_JSON", "true"))

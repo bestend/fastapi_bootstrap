@@ -13,7 +13,7 @@ python examples/simple/app.py
 
 ```python
 from fastapi import APIRouter
-from fastapikit import LoggingAPIRoute, ResponseFormatter, create_app
+from fastapi_bootstrap import LoggingAPIRoute, ResponseFormatter, create_app
 
 router = APIRouter(route_class=LoggingAPIRoute, prefix="/api")
 

@@ -5,7 +5,7 @@ import time
 import pytest
 from fastapi import APIRouter
 
-from fastapikit import create_app
+from fastapi_bootstrap import create_app
 
 
 @pytest.mark.asyncio

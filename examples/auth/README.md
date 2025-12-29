@@ -74,7 +74,7 @@ curl -X POST https://keycloak.../token \
 ## Code
 
 ```python
-from fastapikit import OIDCAuth, OIDCConfig, TokenPayload
+from fastapi_bootstrap import OIDCAuth, OIDCConfig, TokenPayload
 
 # OIDC config
 config = OIDCConfig(

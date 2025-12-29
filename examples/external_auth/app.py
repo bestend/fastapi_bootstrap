@@ -11,7 +11,7 @@ import os
 import uvicorn
 from fastapi import APIRouter, Header
 
-from fastapikit import LoggingAPIRoute, ResponseFormatter, create_app, get_logger
+from fastapi_bootstrap import LoggingAPIRoute, ResponseFormatter, create_app, get_logger
 
 logger = get_logger()
 

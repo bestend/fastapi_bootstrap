@@ -53,15 +53,15 @@ jobs:
       id: release_notes
       run: |
         cat > RELEASE_NOTES.md << 'EOF'
-        ## 🚀 fastapikit v${{ steps.version.outputs.version }}
+        ## 🚀 fastapi_bootstrap v${{ steps.version.outputs.version }}
 
         **Installation:**
         ```bash
-        pip install fastapikit
+        pip install fastapi_bootstrap
         ```
 
         **What's Changed:**
-        See [CHANGELOG.md](https://github.com/bestend/fastapikit/blob/main/CHANGELOG.md) for details.
+        See [CHANGELOG.md](https://github.com/bestend/fastapi_bootstrap/blob/main/CHANGELOG.md) for details.
 
         **Happy coding! 🚀**
         EOF

@@ -1,4 +1,4 @@
-"""fastapikit.log
+"""fastapi_bootstrap.log
 
 로깅 관련 유틸을 제공합니다.
 

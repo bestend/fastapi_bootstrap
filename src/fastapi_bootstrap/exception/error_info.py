@@ -6,7 +6,7 @@ should be converted to HTTP error responses.
 
 from pydantic import Field
 
-from fastapikit.type import BaseModel
+from fastapi_bootstrap.type import BaseModel
 
 
 class ErrorInfo(BaseModel):
@@ -24,7 +24,7 @@ class ErrorInfo(BaseModel):
 
     Example:
         ```python
-        from fastapikit.exception import ErrorInfo
+        from fastapi_bootstrap.exception import ErrorInfo
 
         custom_error_info = ErrorInfo(
             status_code=404,

@@ -7,7 +7,7 @@ import sys
 from loguru import logger
 from loguru._handler import Handler
 
-from fastapikit.util.etc import str2bool
+from fastapi_bootstrap.util.etc import str2bool
 
 sys.tracebacklimit = int(os.getenv("TRACEBACKLIMIT", 10))
 

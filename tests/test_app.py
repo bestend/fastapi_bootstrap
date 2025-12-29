@@ -4,7 +4,7 @@ import pytest
 from fastapi import APIRouter
 from fastapi.testclient import TestClient
 
-from fastapikit import LoggingAPIRoute, create_app
+from fastapi_bootstrap import LoggingAPIRoute, create_app
 
 
 @pytest.fixture

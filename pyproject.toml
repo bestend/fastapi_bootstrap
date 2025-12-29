@@ -3,7 +3,7 @@ requires = ["setuptools>=65.0", "setuptools-scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "fastapikit"
+name = "fastapi_bootstrap"
 version = "0.0.dev"  # Auto-updated by GitHub Actions when tag is pushed
 description = "🚀 Easy FastAPI Setup Kit - Production-ready FastAPI boilerplate with logging, error handling, and more"
 readme = "README.md"
@@ -50,21 +50,21 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/bestend/fastapikit"
-Documentation = "https://github.com/bestend/fastapikit#readme"
-Repository = "https://github.com/bestend/fastapikit.git"
-Issues = "https://github.com/bestend/fastapikit/issues"
+Homepage = "https://github.com/bestend/fastapi_bootstrap"
+Documentation = "https://github.com/bestend/fastapi_bootstrap#readme"
+Repository = "https://github.com/bestend/fastapi_bootstrap.git"
+Issues = "https://github.com/bestend/fastapi_bootstrap/issues"
 
 [tool.setuptools]
-packages = ["fastapikit"]
+packages = ["fastapi_bootstrap"]
 package-dir = {"" = "src"}
 
 [tool.setuptools.package-data]
-fastapikit = ["py.typed"]
+fastapi_bootstrap = ["py.typed"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py39"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM"]
@@ -86,5 +86,5 @@ check_untyped_defs = false
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
-addopts = "-v --cov=fastapikit --cov-report=term-missing"
+addopts = "-v --cov=fastapi_bootstrap --cov-report=term-missing"
 asyncio_mode = "auto"

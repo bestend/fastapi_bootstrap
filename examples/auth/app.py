@@ -1,10 +1,10 @@
 """OIDC/Keycloak authentication example.
 
 This example shows how to integrate OIDC authentication (Keycloak, Auth0, etc.)
-with FastAPI Kit.
+with FastAPI Bootstrap.
 
 Requirements:
-    pip install fastapikit[auth]
+    pip install fastapi_bootstrap[auth]
 """
 
 import os
@@ -12,7 +12,7 @@ import os
 import uvicorn
 from fastapi import APIRouter, Depends
 
-from fastapikit import (
+from fastapi_bootstrap import (
     LoggingAPIRoute,
     OIDCAuth,
     OIDCConfig,

@@ -19,7 +19,7 @@ from fastapi.security import (
 from jose import JWTError, jwt
 from pydantic import BaseModel, Field
 
-from fastapikit.log import get_logger
+from fastapi_bootstrap.log import get_logger
 
 logger = get_logger()
 

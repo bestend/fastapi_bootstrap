@@ -1,4 +1,4 @@
-# FastAPI Kit Examples
+# FastAPI Bootstrap Examples
 
 ## Examples
 
@@ -43,7 +43,7 @@ API Gateway/Ingress authentication, Swagger UI Bearer token support
 ### Basic App
 
 ```python
-from fastapikit import create_app
+from fastapi_bootstrap import create_app
 
 app = create_app([router], title="My API", prefix_url="/v1")
 ```
@@ -51,7 +51,7 @@ app = create_app([router], title="My API", prefix_url="/v1")
 ### Auto Logging
 
 ```python
-from fastapikit import LoggingAPIRoute
+from fastapi_bootstrap import LoggingAPIRoute
 
 router = APIRouter(route_class=LoggingAPIRoute)
 ```
@@ -59,7 +59,7 @@ router = APIRouter(route_class=LoggingAPIRoute)
 ### Standard Responses
 
 ```python
-from fastapikit import ResponseFormatter
+from fastapi_bootstrap import ResponseFormatter
 
 return ResponseFormatter.success(data={...})
 return ResponseFormatter.paginated(data=[...], page=1, page_size=10, total_items=100)
@@ -68,7 +68,7 @@ return ResponseFormatter.paginated(data=[...], page=1, page_size=10, total_items
 ### OIDC Auth
 
 ```python
-from fastapikit import OIDCAuth, OIDCConfig
+from fastapi_bootstrap import OIDCAuth, OIDCConfig
 
 config = OIDCConfig(issuer="...", client_id="...")
 auth = OIDCAuth(config)

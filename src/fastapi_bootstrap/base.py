@@ -23,9 +23,9 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, RedirectResponse, Response
 
-from fastapikit.exception.handler import add_exception_handler
-from fastapikit.log import get_logger
-from fastapikit.logging_utils import setup_logging
+from fastapi_bootstrap.exception.handler import add_exception_handler
+from fastapi_bootstrap.log import get_logger
+from fastapi_bootstrap.logging_utils import setup_logging
 
 logger = get_logger()
 
@@ -172,7 +172,7 @@ def create_app(
     Example:
         ```python
         from fastapi import APIRouter
-        from fastapikit import create_app, LoggingAPIRoute
+        from fastapi_bootstrap import create_app, LoggingAPIRoute
 
         router = APIRouter(route_class=LoggingAPIRoute)
 

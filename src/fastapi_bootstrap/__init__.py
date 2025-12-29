@@ -1,4 +1,4 @@
-"""FastAPI Kit
+"""FastAPI Bootstrap
 
 🚀 Production-ready FastAPI boilerplate with batteries included.
 
@@ -8,7 +8,7 @@ request/response tracking, and more out of the box.
 **Quick Start:**
 ```python
 from fastapi import APIRouter
-from fastapikit import create_app, LoggingAPIRoute
+from fastapi_bootstrap import create_app, LoggingAPIRoute
 
 router = APIRouter(route_class=LoggingAPIRoute)
 
@@ -21,16 +21,16 @@ app = create_app([router], title="My API", version="1.0.0")
 
 **Recommended import style:**
 ```python
-from fastapikit import create_app, LoggingAPIRoute, BaseModel
-from fastapikit.log import get_logger
-from fastapikit.exception import add_exception_handler
+from fastapi_bootstrap import create_app, LoggingAPIRoute, BaseModel
+from fastapi_bootstrap.log import get_logger
+from fastapi_bootstrap.exception import add_exception_handler
 ```
 
 **Avoid importing from internal modules:**
 ```python
 # ❌ Don't do this
-from fastapikit.base import create_app
-from fastapikit.exception.handler import add_exception_handler
+from fastapi_bootstrap.base import create_app
+from fastapi_bootstrap.exception.handler import add_exception_handler
 ```
 """
 

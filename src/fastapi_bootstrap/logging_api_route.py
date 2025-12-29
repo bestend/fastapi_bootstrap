@@ -7,9 +7,9 @@ from fastapi.responses import JSONResponse, Response
 from fastapi.routing import APIRoute
 from uvicorn.protocols.utils import get_path_with_query_string
 
-from fastapikit.exception import generate_error_response
-from fastapikit.log import get_logger
-from fastapikit.util import get_trace_id
+from fastapi_bootstrap.exception import generate_error_response
+from fastapi_bootstrap.log import get_logger
+from fastapi_bootstrap.util import get_trace_id
 
 logger = get_logger()
 
@@ -35,7 +35,7 @@ class LoggingAPIRoute(APIRoute):
     Usage:
         ```python
         from fastapi import APIRouter
-        from fastapikit import LoggingAPIRoute
+        from fastapi_bootstrap import LoggingAPIRoute
 
         router = APIRouter(route_class=LoggingAPIRoute)
 

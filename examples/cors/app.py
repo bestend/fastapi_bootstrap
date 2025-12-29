@@ -1,6 +1,6 @@
 """CORS Configuration Example
 
-이 예제는 FastAPI Kit에서 CORS를 환경별로 설정하는 방법을 보여줍니다.
+이 예제는 FastAPI Bootstrap에서 CORS를 환경별로 설정하는 방법을 보여줍니다.
 
 Features:
 - 환경별 CORS 설정 (dev/staging/prod)
@@ -13,7 +13,7 @@ import os
 import uvicorn
 from fastapi import APIRouter
 
-from fastapikit import LoggingAPIRoute, ResponseFormatter, create_app, get_logger
+from fastapi_bootstrap import LoggingAPIRoute, ResponseFormatter, create_app, get_logger
 
 logger = get_logger()
 

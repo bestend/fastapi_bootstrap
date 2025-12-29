@@ -278,7 +278,7 @@ wheels = [
 ]
 
 [[package]]
-name = "fastapikit"
+name = "fastapi_bootstrap"
 version = "0.0.dev0"
 source = { editable = "." }
 dependencies = [
