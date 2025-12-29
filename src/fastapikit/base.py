@@ -4,6 +4,8 @@ This module provides the main `create_app()` function that creates a fully
 configured FastAPI application with logging, error handling, CORS, and more.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import os
@@ -11,7 +13,7 @@ from collections.abc import Callable
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import APIRouter, Depends, FastAPI
+from fastapi import APIRouter, FastAPI
 from fastapi.openapi.docs import (
     get_redoc_html,
     get_swagger_ui_html,
@@ -116,7 +118,7 @@ def create_app(
     version: str = "",
     prefix_url: str = "",
     graceful_timeout: int = 10,
-    dependencies: list[Depends] | None = None,
+    dependencies: list[Any] | None = None,
     middlewares: list | None = None,
     startup_coroutines: list[Callable] | None = None,
     shutdown_coroutines: list[Callable] | None = None,
@@ -227,25 +229,14 @@ def create_app(
             logger.info("CORS origins set to '*' for development (not for production!)")
 
     if cors_allow_methods is None:
-        if stage == "prod":
-            # Production: Only common safe methods by default
-            cors_allow_methods = ["GET", "POST", "PUT", "DELETE", "PATCH"]
-        else:
-            # Development/Staging: All methods
-            cors_allow_methods = ["*"]
+        # Production: Only common safe methods; Development/Staging: All methods
+        cors_allow_methods = ["GET", "POST", "PUT", "DELETE", "PATCH"] if stage == "prod" else ["*"]
 
     if cors_allow_headers is None:
-        if stage == "prod":
-            # Production: Only common headers
-            cors_allow_headers = [
-                "Accept",
-                "Accept-Language",
-                "Content-Type",
-                "Authorization",
-            ]
-        else:
-            # Development/Staging: All headers
-            cors_allow_headers = ["*"]
+        # Production: Only common headers; Development/Staging: All headers
+        cors_allow_headers = (
+            ["Content-Type", "Authorization", "X-Request-ID"] if stage == "prod" else ["*"]
+        )
 
     # Set docs prefix to match API prefix if not specified
     if docs_prefix_url == "":
@@ -255,7 +246,9 @@ def create_app(
     docs_api = f"{docs_prefix_url}/docs" if docs_prefix_url else "/docs"
     redoc_api = f"{docs_prefix_url}/redoc" if docs_prefix_url else "/redoc"
     openapi_api = f"{docs_prefix_url}/openapi.json" if docs_prefix_url else "/openapi.json"
-    oauth2_redirect = f"{docs_prefix_url}/docs/oauth2-redirect" if docs_prefix_url else "/docs/oauth2-redirect"
+    oauth2_redirect = (
+        f"{docs_prefix_url}/docs/oauth2-redirect" if docs_prefix_url else "/docs/oauth2-redirect"
+    )
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -360,10 +353,12 @@ def create_app(
             )
 
         # OAuth2 redirect for Swagger UI
-        @app.get(app.swagger_ui_oauth2_redirect_url, include_in_schema=False)
-        async def swagger_ui_redirect():
-            """Handle OAuth2 redirect for Swagger UI."""
-            return get_swagger_ui_oauth2_redirect_html()
+        if app.swagger_ui_oauth2_redirect_url:
+
+            @app.get(app.swagger_ui_oauth2_redirect_url, include_in_schema=False)
+            async def swagger_ui_redirect():
+                """Handle OAuth2 redirect for Swagger UI."""
+                return get_swagger_ui_oauth2_redirect_html()
 
         # ReDoc endpoint (alternative documentation UI)
         @app.get(redoc_api, include_in_schema=False)

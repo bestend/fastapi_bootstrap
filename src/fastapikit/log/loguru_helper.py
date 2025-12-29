@@ -66,7 +66,7 @@ def _serialize_record(self, text, record):
     return json.dumps(serializable, default=str, ensure_ascii=False) + "\n"
 
 
-Handler._serialize_record = _serialize_record
+Handler._serialize_record = _serialize_record  # type: ignore[assignment]
 
 
 class InterceptHandler(logging.Handler):

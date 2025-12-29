@@ -10,6 +10,8 @@ ignore = [
     "E501",  # Line too long (handled by formatter)
     "B904",  # Exception handling - raise from
     "B007",  # Loop control variable not used
+    "B008",  # Function call in default argument (FastAPI Depends pattern)
+    "B019",  # lru_cache on methods (we use manual caching)
     "SIM117",  # Use a single with statement
 ]
 

@@ -5,9 +5,7 @@ from fastapikit.response import ResponseFormatter
 
 def test_success_response():
     """Test basic success response."""
-    response = ResponseFormatter.success(
-        data={"id": 1, "name": "John"}, message="User retrieved"
-    )
+    response = ResponseFormatter.success(data={"id": 1, "name": "John"}, message="User retrieved")
 
     assert response["success"] is True
     assert response["data"] == {"id": 1, "name": "John"}
@@ -65,9 +63,7 @@ def test_error_response_without_details():
 def test_paginated_response():
     """Test paginated response."""
     items = [{"id": i} for i in range(1, 11)]
-    response = ResponseFormatter.paginated(
-        data=items, page=1, page_size=10, total_items=25
-    )
+    response = ResponseFormatter.paginated(data=items, page=1, page_size=10, total_items=25)
 
     assert response["success"] is True
     assert len(response["data"]) == 10
@@ -82,9 +78,7 @@ def test_paginated_response():
 def test_paginated_response_last_page():
     """Test paginated response on last page."""
     items = [{"id": i} for i in range(21, 26)]
-    response = ResponseFormatter.paginated(
-        data=items, page=3, page_size=10, total_items=25
-    )
+    response = ResponseFormatter.paginated(data=items, page=3, page_size=10, total_items=25)
 
     assert response["pagination"]["page"] == 3
     assert response["pagination"]["has_next"] is False
@@ -122,4 +116,3 @@ def test_deleted_response_custom_message():
     response = ResponseFormatter.deleted(message="User deleted")
 
     assert response["message"] == "User deleted"
-

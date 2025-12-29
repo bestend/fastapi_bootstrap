@@ -1,6 +1,8 @@
 """Test OIDC authentication."""
+
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import Mock, patch
 from fastapi import APIRouter, Depends
 from fastapi.testclient import TestClient
 
@@ -45,9 +47,7 @@ def mock_jwt_payload():
 
 def test_oidc_config_default_audience():
     """Test that audience defaults to None (no validation)."""
-    config = OIDCConfig(
-        issuer="https://example.com", client_id="my-client"
-    )
+    config = OIDCConfig(issuer="https://example.com", client_id="my-client")
     assert config.audience is None  # None means no audience validation
 
 
@@ -77,9 +77,7 @@ def test_token_payload_from_jwt(mock_jwt_payload):
 def test_token_payload_roles_extraction():
     """Test role extraction from various locations."""
     # Realm roles
-    payload1 = TokenPayload.from_jwt(
-        {"sub": "1", "realm_access": {"roles": ["role1", "role2"]}}
-    )
+    payload1 = TokenPayload.from_jwt({"sub": "1", "realm_access": {"roles": ["role1", "role2"]}})
     assert "role1" in payload1.roles
     assert "role2" in payload1.roles
 
@@ -143,9 +141,7 @@ def test_protected_route_without_token(oidc_auth):
 
 
 @patch("fastapikit.auth.jwt.decode")
-def test_protected_route_with_valid_token(
-    mock_decode, oidc_auth, mock_jwt_payload
-):
+def test_protected_route_with_valid_token(mock_decode, oidc_auth, mock_jwt_payload):
     """Test accessing protected route with valid token."""
     mock_decode.return_value = mock_jwt_payload
 
@@ -159,9 +155,7 @@ def test_protected_route_with_valid_token(
     client = TestClient(app)
 
     with patch.object(oidc_auth, "_get_signing_key", return_value={}):
-        response = client.get(
-            "/protected", headers={"Authorization": "Bearer fake-token"}
-        )
+        response = client.get("/protected", headers={"Authorization": "Bearer fake-token"})
 
     assert response.status_code == 200
     data = response.json()
@@ -177,18 +171,14 @@ def test_require_roles_success(mock_decode, oidc_auth, mock_jwt_payload):
     router = APIRouter()
 
     @router.get("/admin")
-    async def admin_only(
-        user: TokenPayload = Depends(oidc_auth.require_roles(["admin"]))
-    ):
+    async def admin_only(user: TokenPayload = Depends(oidc_auth.require_roles(["admin"]))):
         return {"message": "Admin access granted"}
 
     app = create_app([router], stage="dev")
     client = TestClient(app)
 
     with patch.object(oidc_auth, "_get_signing_key", return_value={}):
-        response = client.get(
-            "/admin", headers={"Authorization": "Bearer fake-token"}
-        )
+        response = client.get("/admin", headers={"Authorization": "Bearer fake-token"})
 
     assert response.status_code == 200
 
@@ -202,7 +192,7 @@ def test_require_roles_forbidden(mock_decode, oidc_auth, mock_jwt_payload):
 
     @router.get("/superadmin")
     async def superadmin_only(
-        user: TokenPayload = Depends(oidc_auth.require_roles(["superadmin"]))
+        user: TokenPayload = Depends(oidc_auth.require_roles(["superadmin"])),
     ):
         return {"message": "Superadmin access"}
 
@@ -210,9 +200,7 @@ def test_require_roles_forbidden(mock_decode, oidc_auth, mock_jwt_payload):
     client = TestClient(app)
 
     with patch.object(oidc_auth, "_get_signing_key", return_value={}):
-        response = client.get(
-            "/superadmin", headers={"Authorization": "Bearer fake-token"}
-        )
+        response = client.get("/superadmin", headers={"Authorization": "Bearer fake-token"})
 
     assert response.status_code == 403
     # Exception handler converts HTTPException detail to msg
@@ -234,7 +222,7 @@ def test_require_all_roles(mock_decode, oidc_auth):
     async def restricted(
         user: TokenPayload = Depends(
             oidc_auth.require_roles(["admin", "superuser"], require_all=True)
-        )
+        ),
     ):
         return {"message": "Access granted"}
 
@@ -242,9 +230,7 @@ def test_require_all_roles(mock_decode, oidc_auth):
     client = TestClient(app)
 
     with patch.object(oidc_auth, "_get_signing_key", return_value={}):
-        response = client.get(
-            "/restricted", headers={"Authorization": "Bearer fake-token"}
-        )
+        response = client.get("/restricted", headers={"Authorization": "Bearer fake-token"})
 
     # User has admin but not superuser
     assert response.status_code == 403
@@ -259,7 +245,7 @@ def test_require_groups(mock_decode, oidc_auth, mock_jwt_payload):
 
     @router.get("/engineering")
     async def engineering_only(
-        user: TokenPayload = Depends(oidc_auth.require_groups(["/engineering"]))
+        user: TokenPayload = Depends(oidc_auth.require_groups(["/engineering"])),
     ):
         return {"department": "engineering"}
 
@@ -267,9 +253,7 @@ def test_require_groups(mock_decode, oidc_auth, mock_jwt_payload):
     client = TestClient(app)
 
     with patch.object(oidc_auth, "_get_signing_key", return_value={}):
-        response = client.get(
-            "/engineering", headers={"Authorization": "Bearer fake-token"}
-        )
+        response = client.get("/engineering", headers={"Authorization": "Bearer fake-token"})
 
     assert response.status_code == 200
 
@@ -291,9 +275,7 @@ def test_optional_auth_with_token(mock_decode, oidc_auth, mock_jwt_payload):
     client = TestClient(app)
 
     with patch.object(oidc_auth, "_get_signing_key", return_value={}):
-        response = client.get(
-            "/posts", headers={"Authorization": "Bearer fake-token"}
-        )
+        response = client.get("/posts", headers={"Authorization": "Bearer fake-token"})
 
     assert response.status_code == 200
     data = response.json()
@@ -319,4 +301,3 @@ def test_optional_auth_without_token(oidc_auth):
     assert response.status_code == 200
     data = response.json()
     assert data["personalized"] is False
-

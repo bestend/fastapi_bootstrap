@@ -5,6 +5,8 @@ across all endpoints. It ensures that all responses follow a standard structure,
 making it easier for clients to parse and handle responses.
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timezone
 from typing import Any, Generic, TypeVar
 

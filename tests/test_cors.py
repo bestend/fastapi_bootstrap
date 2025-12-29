@@ -1,4 +1,5 @@
 """Test CORS configuration."""
+
 import pytest
 from fastapi import APIRouter
 from fastapi.testclient import TestClient
@@ -23,9 +24,7 @@ def test_cors_dev_default(simple_router):
     app = create_app([simple_router], stage="dev")
     client = TestClient(app)
 
-    response = client.get(
-        "/test", headers={"Origin": "https://random-domain.com"}
-    )
+    response = client.get("/test", headers={"Origin": "https://random-domain.com"})
 
     # Should allow any origin in dev
     assert response.status_code == 200
@@ -37,9 +36,7 @@ def test_cors_prod_restrictive(simple_router):
     app = create_app([simple_router], stage="prod")
     client = TestClient(app)
 
-    response = client.get(
-        "/test", headers={"Origin": "https://random-domain.com"}
-    )
+    response = client.get("/test", headers={"Origin": "https://random-domain.com"})
 
     # Should not allow random origins in prod
     assert response.status_code == 200
@@ -49,9 +46,7 @@ def test_cors_prod_restrictive(simple_router):
 def test_cors_prod_explicit_origins(simple_router):
     """Test explicit CORS origins in production."""
     allowed_origins = ["https://myapp.com", "https://www.myapp.com"]
-    app = create_app(
-        [simple_router], stage="prod", cors_origins=allowed_origins
-    )
+    app = create_app([simple_router], stage="prod", cors_origins=allowed_origins)
     client = TestClient(app)
 
     # Test allowed origin
@@ -60,9 +55,7 @@ def test_cors_prod_explicit_origins(simple_router):
     assert response.headers["access-control-allow-origin"] == "https://myapp.com"
 
     # Test disallowed origin
-    response = client.get(
-        "/test", headers={"Origin": "https://evil-site.com"}
-    )
+    response = client.get("/test", headers={"Origin": "https://evil-site.com"})
     assert response.status_code == 200
     assert "access-control-allow-origin" not in response.headers
 
@@ -127,4 +120,3 @@ def test_cors_staging_environment(simple_router):
 
     # Response should be successful
     assert response.status_code == 200
-

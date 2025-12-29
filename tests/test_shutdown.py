@@ -1,10 +1,10 @@
 """Test graceful shutdown timing."""
-import asyncio
+
 import time
 
 import pytest
-
 from fastapi import APIRouter
+
 from fastapikit import create_app
 
 
@@ -53,4 +53,3 @@ async def test_graceful_shutdown_with_delay():
     # Should wait for the graceful timeout
     assert elapsed >= timeout, f"Expected >= {timeout}s, got {elapsed:.2f}s"
     assert elapsed < timeout + 0.5, f"Too slow: {elapsed:.2f}s"
-

@@ -5,8 +5,10 @@ Auth0, Google, etc. It handles token validation, user info extraction, and
 dependency injection for protected routes.
 """
 
-import functools
+from __future__ import annotations
+
 import time
+from collections.abc import Callable
 from typing import Any
 
 import httpx
@@ -59,7 +61,7 @@ class OIDCConfig(BaseModel):
     audience: str | None = Field(
         default=None,
         description="Expected audience. If None, audience validation is skipped. "
-                    "Some OIDC providers (like Keycloak) may not set audience claim."
+        "Some OIDC providers (like Keycloak) may not set audience claim.",
     )
     algorithms: list[str] = Field(default=["RS256"], description="Allowed JWT algorithms")
     verify_signature: bool = Field(default=True, description="Verify JWT signature")
@@ -99,7 +101,7 @@ class TokenPayload(BaseModel):
     raw: dict[str, Any] = Field(default_factory=dict, description="Raw token payload")
 
     @classmethod
-    def from_jwt(cls, payload: dict[str, Any]) -> "TokenPayload":
+    def from_jwt(cls, payload: dict[str, Any]) -> TokenPayload:
         """Create TokenPayload from JWT payload.
 
         Args:
@@ -142,35 +144,15 @@ class OIDCAuth:
 
     Handles JWT token validation, JWKS caching, and user info extraction.
 
-    Example:
-        ```python
-        from fastapi import APIRouter, Depends
-        from fastapikit.auth import OIDCAuth, OIDCConfig, TokenPayload
-
-        # Configure OIDC
-        config = OIDCConfig(
-            issuer="https://keycloak.example.com/realms/myrealm",
-            client_id="my-api"
-        )
-        auth = OIDCAuth(config)
-
-        router = APIRouter()
-
-        # Protected route
-        @router.get("/users/me")
-        async def get_current_user(token: TokenPayload = Depends(auth.get_current_user)):
-            return {
-                "sub": token.sub,
-                "email": token.email,
-                "roles": token.roles
-            }
-
-        # Role-based access
-        @router.get("/admin")
-        async def admin_only(token: TokenPayload = Depends(auth.require_roles(["admin"]))):
-            return {"message": "Admin access granted"}
-        ```
+    Attributes:
+        config: OIDC configuration
+        security: HTTPBearer security scheme
+        oauth2_scheme: OAuth2 scheme for Swagger UI (optional)
     """
+
+    config: OIDCConfig
+    security: HTTPBearer
+    oauth2_scheme: OAuth2AuthorizationCodeBearer | None
 
     def __init__(self, config: OIDCConfig, enable_swagger_ui: bool = True):
         """Initialize OIDC authentication handler.
@@ -194,39 +176,48 @@ class OIDCAuth:
                 token_url = oidc_config.get("token_endpoint")
             except Exception as e:
                 logger.warning(f"Failed to fetch OIDC config for Swagger UI: {e}")
-                auth_url = f"{config.issuer}/protocol/openid-connect/auth"
-                token_url = f"{config.issuer}/protocol/openid-connect/token"
+                auth_url = None
+                token_url = None
 
-            self.oauth2_scheme = OAuth2AuthorizationCodeBearer(
-                authorizationUrl=auth_url,
-                tokenUrl=token_url,
-                scopes={
-                    "openid": "OpenID Connect",
-                    "profile": "User profile",
-                    "email": "Email address",
-                },
-                auto_error=False,  # Don't auto-error, we handle it manually
-            )
+            # Only create OAuth2 scheme if we have valid URLs
+            if auth_url and token_url and isinstance(auth_url, str) and isinstance(token_url, str):
+                self.oauth2_scheme = OAuth2AuthorizationCodeBearer(
+                    authorizationUrl=auth_url,
+                    tokenUrl=token_url,
+                    scopes={
+                        "openid": "OpenID Connect",
+                        "profile": "User profile",
+                        "email": "Email address",
+                    },
+                    auto_error=False,  # Don't auto-error, we handle it manually
+                )
+            else:
+                self.oauth2_scheme = None
         else:
             self.oauth2_scheme = None
 
         self._jwks_cache: dict[str, Any] | None = None
         self._jwks_cache_time: float = 0
         self._jwks_cache_ttl: int = 3600  # 1 hour
+        self._oidc_config_cache: dict[str, Any] | None = None
 
-    @functools.lru_cache
     def _get_oidc_config(self) -> dict[str, Any]:
         """Fetch OIDC configuration from .well-known endpoint.
 
         Returns:
             OIDC configuration dictionary
         """
+        # Return cached config if available
+        if self._oidc_config_cache:
+            return self._oidc_config_cache
+
         url = f"{self.config.issuer}/.well-known/openid-configuration"
         logger.info(f"Fetching OIDC configuration from {url}")
 
         response = httpx.get(url, timeout=10)
         response.raise_for_status()
-        return response.json()
+        self._oidc_config_cache = response.json()
+        return self._oidc_config_cache
 
     def _get_jwks(self) -> dict[str, Any]:
         """Fetch JWKS (JSON Web Key Set) from provider.
@@ -339,7 +330,9 @@ class OIDCAuth:
                 detail=f"Invalid token: {str(e)}",
             )
 
-    def get_current_user_dependency(self):
+    def get_current_user_dependency(
+        self,
+    ) -> Callable[..., Any]:
         """Create a dependency for getting the current user.
 
         This method returns a FastAPI dependency function that validates
@@ -358,7 +351,7 @@ class OIDCAuth:
         # Use oauth2_scheme if available (for Swagger UI integration)
         if self.oauth2_scheme:
 
-            async def dependency(token: str = Depends(self.oauth2_scheme)) -> TokenPayload:
+            async def dependency(token: str = Depends(self.oauth2_scheme)) -> TokenPayload:  # type: ignore[misc]
                 """Validate token and return user info."""
                 payload = self.verify_token(token)
                 return TokenPayload.from_jwt(payload)
@@ -366,7 +359,7 @@ class OIDCAuth:
             return dependency
         else:
             # Fall back to manual header parsing
-            async def dependency(request: Request) -> TokenPayload:
+            async def dependency(request: Request) -> TokenPayload:  # type: ignore[misc]
                 """Validate token from Authorization header."""
                 auth_header = request.headers.get("Authorization")
                 if not auth_header or not auth_header.startswith("Bearer "):

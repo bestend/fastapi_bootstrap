@@ -4,6 +4,8 @@ This module defines custom exception classes that are automatically
 handled by the exception handler and converted to appropriate HTTP responses.
 """
 
+from __future__ import annotations
+
 
 class BadRequestHeaderError(Exception):
     """Exception raised when request headers are invalid or malformed.
