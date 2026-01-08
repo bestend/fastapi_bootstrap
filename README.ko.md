@@ -111,6 +111,13 @@ async def shutdown_handler(app):
     logger.info("애플리케이션 종료 중...")
     # 리소스 정리
 
+# 또는 app 파라미터 없이도 사용 가능 (두 스타일 모두 지원)
+async def simple_startup():
+    logger.info("간단한 시작...")
+
+async def simple_shutdown():
+    logger.info("간단한 종료...")
+
 app = create_app(
     api_list=[router],
     title="내 프로덕션 API",
@@ -142,8 +149,8 @@ app = create_app(
 - `graceful_timeout`: 종료 전 대기 시간(초) (기본값: 10)
 - `docs_enable`: API 문서 활성화/비활성화 (기본값: True)
 - `health_check_api`: 헬스 체크 엔드포인트 경로 (기본값: "/healthz")
-- `startup_coroutines`: 시작 시 실행할 비동기 함수 목록
-- `shutdown_coroutines`: 종료 시 실행할 비동기 함수 목록
+- `startup_coroutines`: 시작 시 실행할 비동기 함수 목록 (`app` 파라미터 있어도 되고 없어도 됨)
+- `shutdown_coroutines`: 종료 시 실행할 비동기 함수 목록 (`app` 파라미터 있어도 되고 없어도 됨)
 - `stage`: 환경 스테이지 (dev/staging/prod)
 
 ### 2. `LoggingAPIRoute`

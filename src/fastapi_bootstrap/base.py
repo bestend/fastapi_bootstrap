@@ -4,8 +4,8 @@ This module provides the main `create_app()` function that creates a fully
 configured FastAPI application with logging, error handling, CORS, and more.
 """
 
-
 import asyncio
+import inspect
 import logging
 import os
 from collections.abc import Callable
@@ -267,7 +267,12 @@ def create_app(
 
         # Run user-defined startup coroutines
         for coroutine in startup_coroutines:
-            await coroutine(app)
+            # Check if the coroutine accepts an app parameter
+            sig = inspect.signature(coroutine)
+            if len(sig.parameters) > 0:
+                await coroutine(app)
+            else:
+                await coroutine()
 
         yield
 
@@ -280,7 +285,12 @@ def create_app(
 
         # Run user-defined shutdown coroutines
         for coroutine in shutdown_coroutines:
-            await coroutine(app)
+            # Check if the coroutine accepts an app parameter
+            sig = inspect.signature(coroutine)
+            if len(sig.parameters) > 0:
+                await coroutine(app)
+            else:
+                await coroutine()
 
     # Create FastAPI application instance
     app = FastAPI(

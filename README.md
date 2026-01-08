@@ -112,6 +112,13 @@ async def shutdown_handler(app):
     logger.info("Application shutting down...")
     # Cleanup resources
 
+# Or without app parameter (both styles are supported)
+async def simple_startup():
+    logger.info("Simple startup...")
+
+async def simple_shutdown():
+    logger.info("Simple shutdown...")
+
 app = create_app(
     api_list=[router],
     title="My Production API",
@@ -145,8 +152,8 @@ The main function to create a FastAPI application with all features enabled.
   - Set to `10-30` for production (allows in-flight requests to complete)
 - `docs_enable`: Enable/disable API documentation (default: True)
 - `health_check_api`: Health check endpoint path (default: "/healthz")
-- `startup_coroutines`: List of async functions to run on startup
-- `shutdown_coroutines`: List of async functions to run on shutdown
+- `startup_coroutines`: List of async functions to run on startup (with or without `app` parameter)
+- `shutdown_coroutines`: List of async functions to run on shutdown (with or without `app` parameter)
 - `stage`: Environment stage (dev/staging/prod)
 
 ### 2. `LoggingAPIRoute`
