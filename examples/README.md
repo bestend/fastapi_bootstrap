@@ -10,6 +10,14 @@ python examples/simple/app.py
 
 Logging, standardized responses, pagination
 
+### [Builder](./builder/) - Builder Pattern (NEW!)
+
+```bash
+python examples/builder/app.py
+```
+
+Fluent builder API, metrics, security headers, request ID/timing
+
 ### [Auth](./auth/) - OIDC Authentication
 
 ```bash
@@ -40,12 +48,30 @@ API Gateway/Ingress authentication, Swagger UI Bearer token support
 
 ## Quick Reference
 
-### Basic App
+### Basic App (Traditional)
 
 ```python
 from fastapi_bootstrap import create_app
 
 app = create_app([router], title="My API", prefix_url="/v1")
+```
+
+### Basic App (Builder Pattern) ✨
+
+```python
+from fastapi_bootstrap import bootstrap
+
+app = (
+    bootstrap()
+    .title("My API")
+    .version("1.0.0")
+    .stage("prod")
+    .with_cors(origins=["https://myapp.com"])
+    .with_security_headers()
+    .with_metrics()
+    .add_router(router)
+    .build()
+)
 ```
 
 ### Auto Logging
@@ -76,6 +102,55 @@ auth = OIDCAuth(config)
 @router.get("/me")
 async def get_me(user = Depends(auth.get_current_user)):
     return {"email": user.email}
+```
+
+### Prometheus Metrics
+
+```python
+from fastapi_bootstrap import get_metrics_router, MetricsMiddleware
+
+app.add_middleware(MetricsMiddleware)
+app.include_router(get_metrics_router())
+# Metrics available at GET /metrics
+```
+
+### Security Headers
+
+```python
+from fastapi_bootstrap import SecurityHeadersMiddleware
+
+app.add_middleware(
+    SecurityHeadersMiddleware,
+    stage="prod",
+    hsts_max_age=31536000,
+    content_security_policy="default-src 'self'",
+)
+```
+
+### Configuration
+
+```python
+from fastapi_bootstrap import BootstrapSettings, get_settings
+
+# Load from environment variables
+settings = get_settings()
+
+# Or configure programmatically
+settings = BootstrapSettings(
+    stage="prod",
+    logging=LoggingSettings(level="WARNING"),
+    cors=CORSSettings(origins=["https://myapp.com"]),
+)
+```
+
+### Sensitive Data Masking
+
+```python
+from fastapi_bootstrap import mask_sensitive_data
+
+data = {"username": "john", "password": "secret123"}
+masked = mask_sensitive_data(data)
+# {"username": "john", "password": "***MASKED***"}
 ```
 
 ### CORS
