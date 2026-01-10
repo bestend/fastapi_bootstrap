@@ -10,57 +10,35 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Status](https://img.shields.io/badge/status-beta-brightgreen)](https://github.com/bestend/fastapi_bootstrap)
 [![Tests](https://github.com/bestend/fastapi_bootstrap/actions/workflows/tests.yml/badge.svg)](https://github.com/bestend/fastapi_bootstrap/actions/workflows/tests.yml)
 
 </div>
 
 ---
 
-## ✨ 개요
+## ✨ 기능
 
-**FastAPI Bootstrap**은 강력한 API를 빠르게 구축하는 데 필요한 모든 것을 포함하는 프로덕션 준비 FastAPI 보일러플레이트입니다. 사전 구성된 로깅, 에러 핸들링, 요청/응답 추적, 메트릭, 보안 헤더 등을 즉시 사용할 수 있습니다.
-
-매 FastAPI 프로젝트마다 같은 보일러플레이트 코드를 작성하는 것을 멈추세요. FastAPI Bootstrap으로 바로 기능 개발을 시작하세요.
-
----
-
-## 🎯 주요 기능
-
-- **📝 스마트 로깅** — Loguru를 사용한 구조화된 로깅, 요청/응답 추적, Trace ID
-- **🛡️ 예외 처리** — 커스터마이징 가능한 에러 응답과 중앙 집중식 에러 핸들링
-- **🔍 요청 추적** — OpenTelemetry 통합으로 자동 Trace ID 전파
-- **🎨 커스텀 API Route** — 자동 요청/응답 로깅이 포함된 향상된 APIRoute
-- **⚡️ 타입 안전성** — Pydantic V2 통합으로 강력한 데이터 검증
-- **🏥 헬스 체크** — 내장 헬스 체크 엔드포인트
-- **📚 자동 문서화** — 자동 OpenAPI/Swagger UI 생성
-- **🔧 높은 설정성** — 로깅, CORS, 미들웨어 등을 커스터마이징 가능
-- **🚀 프로덕션 준비** — Graceful shutdown, 환경 기반 설정
-- **📊 Prometheus 메트릭** — 요청 통계가 포함된 내장 메트릭 엔드포인트 *(NEW)*
-- **🔒 보안 헤더** — HSTS, CSP, X-Frame-Options 미들웨어 *(NEW)*
-- **🏗️ Builder 패턴** — 직관적인 앱 설정을 위한 Fluent API *(NEW)*
+- **📝 구조화된 로깅** — Loguru 기반 로깅, 요청 추적, Trace ID
+- **🛡️ 예외 처리** — 중앙 집중식 에러 핸들링, 커스텀 응답
+- **📊 Prometheus 메트릭** — 내장 `/metrics` 엔드포인트, 요청 통계
+- **🔒 보안 헤더** — HSTS, CSP, X-Frame-Options 미들웨어
+- **🔐 OIDC 인증** — JWKS 지원 JWT 검증 (선택)
+- **⚡️ 타입 안전성** — Pydantic V2 통합, 향상된 BaseModel
 
 ---
 
 ## 📦 설치
 
 ```bash
-pip install fastapi_bootstrap
+pip install fastapi-bootstrap
 
 # 인증 지원 포함
-pip install fastapi_bootstrap[auth]
-
-# 모든 선택적 의존성 포함
-pip install fastapi_bootstrap[all]
+pip install fastapi-bootstrap[auth]
 ```
 
 ---
 
 ## 🚀 빠른 시작
-
-완전한 예제는 [examples/](./examples/) 디렉토리를 참조하세요.
-
-### 기본 사용법 (전통적 방식)
 
 ```python
 from fastapi import APIRouter
@@ -72,421 +50,255 @@ router = APIRouter(route_class=LoggingAPIRoute)
 async def hello():
     return {"message": "안녕하세요!"}
 
-app = create_app(
-    [router],
-    title="내 API",
-    version="1.0.0",
-)
+app = create_app([router], title="내 API", version="1.0.0")
 ```
 
-### 기본 사용법 (Builder 패턴) ✨ NEW
-
-```python
-from fastapi import APIRouter
-from fastapi_bootstrap import bootstrap, LoggingAPIRoute
-
-router = APIRouter(route_class=LoggingAPIRoute)
-
-@router.get("/hello")
-async def hello():
-    return {"message": "안녕하세요!"}
-
-app = (
-    bootstrap()
-    .title("내 API")
-    .version("1.0.0")
-    .stage("prod")
-    .with_cors(origins=["https://myapp.com"])
-    .with_security_headers()
-    .with_metrics()
-    .with_request_id()
-    .add_router(router)
-    .build()
-)
-```
-
-### 앱 실행
-
-```bash
-uvicorn main:app --host 0.0.0.0 --port 8000
-```
+실행: `uvicorn app:app --reload`
 
 ---
 
-## 🏗️ Builder 패턴 *(NEW)*
+## 📖 핵심 API
 
-Fluent API로 직관적인 앱 설정:
+### `create_app()`
 
-```python
-from fastapi_bootstrap import bootstrap, FastAPIBootstrap
-
-# Fluent 체이닝
-app = (
-    bootstrap()
-    .title("내 API")
-    .version("1.0.0")
-    .stage("prod")
-    .with_cors(origins=["https://myapp.com"])
-    .with_security_headers()
-    .with_metrics(endpoint="/metrics")
-    .with_request_id()
-    .with_request_timing()
-    .add_router(router)
-    .build()
-)
-
-# 또는 환경 설정에서 구성
-from fastapi_bootstrap.config import BootstrapSettings
-settings = BootstrapSettings()  # 환경변수에서 자동 로드
-```
-
----
-
-## 📊 Prometheus 메트릭 *(NEW)*
+모든 기능이 구성된 FastAPI 애플리케이션을 생성합니다.
 
 ```python
-from fastapi_bootstrap import bootstrap
-
-app = bootstrap().title("내 API").with_metrics().build()
-
-# GET /metrics 에서 확인:
-# http_requests_total{method="GET", path="/hello", status="200"} 42
-# http_request_duration_seconds_bucket{le="0.1"} 35
-```
-
----
-
-## 🔒 보안 헤더 *(NEW)*
-
-```python
-app = (
-    bootstrap()
-    .with_security_headers(
-        hsts_max_age=31536000,  # 1년
-        content_security_policy="default-src 'self'",
-        x_frame_options="DENY",
-    )
-    .build()
-)
-
-# 응답 헤더:
-# Strict-Transport-Security: max-age=31536000; includeSubDomains
-# X-Content-Type-Options: nosniff
-# X-Frame-Options: DENY
-```
-
----
-
-## ⚙️ 전체 설정 예제
-
-```python
-from fastapi import APIRouter
-from fastapi_bootstrap import create_app, LoggingAPIRoute, get_logger
-
-logger = get_logger()
-
-router = APIRouter(route_class=LoggingAPIRoute)
-
-@router.get("/api/hello")
-async def hello():
-    logger.info("Hello 엔드포인트 호출됨")
-    return {"message": "안녕하세요!"}
-
-async def startup_handler(app):
-    logger.info("애플리케이션 시작 중...")
-    # 데이터베이스, 커넥션 등 초기화
-
-async def shutdown_handler(app):
-    logger.info("애플리케이션 종료 중...")
-    # 리소스 정리
-
-# 또는 app 파라미터 없이도 사용 가능 (두 스타일 모두 지원)
-async def simple_startup():
-    logger.info("간단한 시작...")
-
-async def simple_shutdown():
-    logger.info("간단한 종료...")
+from fastapi_bootstrap import create_app
 
 app = create_app(
-    api_list=[router],
-    title="내 프로덕션 API",
-    version="1.0.0",
-    prefix_url="/api/v1",
-    graceful_timeout=10,
-    docs_enable=True,
-    docs_prefix_url="/api/v1",
-    health_check_api="/healthz",
-    startup_coroutines=[startup_handler],
-    shutdown_coroutines=[shutdown_handler],
-    stage="prod",  # dev, staging, prod
+    routers=[router],           # APIRouter 리스트
+    title="내 API",             # API 제목
+    version="1.0.0",            # API 버전
+    description="",             # API 설명
+    docs_url="/docs",           # Swagger UI 경로 (None으로 비활성화)
+    openapi_url="/openapi.json",
+    lifespan=None,              # 커스텀 lifespan 컨텍스트 매니저
 )
 ```
 
----
+### `LoggingAPIRoute`
 
-## 📖 핵심 컴포넌트
-
-### 1. `create_app()`
-
-모든 기능이 활성화된 FastAPI 애플리케이션을 생성하는 메인 함수입니다.
-
-**파라미터:**
-- `api_list`: APIRouter 인스턴스 목록
-- `title`: API 제목
-- `version`: API 버전
-- `prefix_url`: 모든 라우트의 URL 접두사
-- `graceful_timeout`: 종료 전 대기 시간(초) (기본값: 10)
-- `docs_enable`: API 문서 활성화/비활성화 (기본값: True)
-- `health_check_api`: 헬스 체크 엔드포인트 경로 (기본값: "/healthz")
-- `startup_coroutines`: 시작 시 실행할 비동기 함수 목록 (`app` 파라미터 있어도 되고 없어도 됨)
-- `shutdown_coroutines`: 종료 시 실행할 비동기 함수 목록 (`app` 파라미터 있어도 되고 없어도 됨)
-- `stage`: 환경 스테이지 (dev/staging/prod)
-
-### 2. `LoggingAPIRoute`
-
-Trace ID와 함께 모든 요청과 응답을 자동으로 로깅하는 향상된 APIRoute 클래스입니다.
+타이밍과 Trace ID를 포함한 요청/응답 로깅 기능이 있는 향상된 APIRoute.
 
 ```python
 from fastapi import APIRouter
 from fastapi_bootstrap import LoggingAPIRoute
 
 router = APIRouter(route_class=LoggingAPIRoute)
+
+@router.get("/users/{user_id}")
+async def get_user(user_id: int):
+    return {"user_id": user_id}
 ```
 
-### 3. `get_logger()`
+출력:
+```
+INFO | trace_id=abc123 | GET /users/42 | 200 OK | 12.5ms
+```
 
-사전 구성된 Loguru 로거 인스턴스를 가져옵니다.
+### `get_logger()`
+
+구성된 Loguru 로거 인스턴스를 가져옵니다.
 
 ```python
 from fastapi_bootstrap import get_logger
 
-logger = get_logger()
-logger.info("애플리케이션 시작됨")
-logger.error("문제가 발생했습니다")
+logger = get_logger(__name__)
+logger.info("처리 시작", user_id=123, action="fetch")
 ```
 
-### 4. `BaseModel`
+### `BaseModel`
 
-합리적인 기본값을 가진 향상된 Pydantic BaseModel입니다.
+엄격한 검증이 포함된 향상된 Pydantic BaseModel.
 
 ```python
 from fastapi_bootstrap import BaseModel
 
-class UserRequest(BaseModel):
+class User(BaseModel):
     name: str
     email: str
-    age: int = 0
+    age: int | None = None
 ```
 
-### 5. 예외 처리
+---
 
-커스터마이징 가능한 에러 응답과 함께 자동 예외 처리를 제공합니다.
+## 📊 메트릭
+
+`MetricsMiddleware`로 Prometheus 메트릭을 활성화합니다.
 
 ```python
-from fastapi_bootstrap.exception import BadRequestHeaderError, InvalidAccessTokenError
+from fastapi_bootstrap import create_app, MetricsMiddleware, get_metrics_router
 
-# 커스텀 예외 발생
-raise BadRequestHeaderError("잘못된 헤더 형식")
-raise InvalidAccessTokenError("토큰 만료됨")
+app = create_app([router], title="내 API")
+app.add_middleware(MetricsMiddleware)
+app.include_router(get_metrics_router())  # /metrics 엔드포인트 추가
 ```
+
+제공되는 메트릭:
+- `http_requests_total` — 메서드, 경로, 상태별 총 요청 수
+- `http_request_duration_seconds` — 요청 지연 히스토그램
+- `http_requests_in_progress` — 현재 활성 요청 수
+- `http_request_size_bytes` — 요청 본문 크기
+- `http_response_size_bytes` — 응답 본문 크기
 
 ---
 
-## 🔧 환경 변수
+## 🔒 보안 헤더
 
-환경 변수를 사용하여 애플리케이션을 구성합니다:
-
-```bash
-# 로깅
-export LOG_LEVEL=INFO              # DEBUG, INFO, WARNING, ERROR, CRITICAL
-export LOG_JSON=false              # JSON 로그는 true, 예쁜 로그는 false
-export LOG_STRING_LENGTH=5000      # 로그 문자열 최대 길이
-
-# 애플리케이션
-export CONFIG_FILE=config.yaml     # 설정 파일 경로
-```
-
----
-
-## 📝 로깅 기능
-
-FastAPI Bootstrap은 고급 로깅 기능을 포함합니다:
-
-- **구조화된 로깅**: JSON 또는 예쁘게 포맷된 로그
-- **요청/응답 로깅**: 모든 API 호출 자동 로깅
-- **Trace ID 전파**: OpenTelemetry로 서비스 간 요청 추적
-- **컨텍스트 바인딩**: 로그 항목에 컨텍스트 정보 첨부
-- **로그 절단**: 긴 로그 메시지 자동 절단
-- **표준 라이브러리 통합**: uvicorn, fastapi 등의 로그 캡처
-
-로그 출력 예제:
-```
-2024-12-28 22:30:15.123 | INFO  | app.py:main:42 | request | abc123def | GET | /api/v1/users | {"query": "active"}
-2024-12-28 22:30:15.234 | INFO  | app.py:main:42 | response | abc123def | GET | /api/v1/users | 200 | {"users": [...]}
-```
-
----
-
-## 🎨 예제 애플리케이션
-
-다음을 포함한 완전한 예제는 `example.py`를 참조하세요:
-- 설정 관리
-- 서비스 초기화
-- 의존성 주입
-- 커스텀 미들웨어
-- 시작/종료 핸들러
-
----
-
-## 🧪 테스트
-
-```bash
-# 개발 의존성 설치
-pip install -e ".[dev]"
-
-# 테스트 실행
-pytest tests/
-
-# 커버리지와 함께 실행
-pytest tests/ --cov=fastapi_bootstrap --cov-report=html
-```
-
----
-
-## 🛠️ 개발
-
-```bash
-# 저장소 클론
-git clone https://github.com/bestend/fastapi_bootstrap.git
-cd fastapi_bootstrap
-
-# 개발 모드로 설치
-pip install -e ".[dev]"
-
-# 린팅 실행
-ruff check src/ tests/
-
-# 코드 포맷
-ruff format src/ tests/
-
-# 타입 체킹
-mypy src/
-```
-
----
-
-## 📚 고급 사용법
-
-### 커스텀 예외 핸들러
+모든 응답에 보안 헤더를 추가합니다.
 
 ```python
-from fastapi_bootstrap.exception import ErrorInfo, get_exception_definitions
+from fastapi_bootstrap import create_app, SecurityHeadersMiddleware
 
-# 커스텀 예외 추가
-class CustomError(Exception):
-    pass
+app = create_app([router], title="내 API")
+app.add_middleware(SecurityHeadersMiddleware)
+```
 
-# 커스텀 에러 정보 등록
-get_exception_definitions()[CustomError] = ErrorInfo(
-    status_code=400,
-    msg="커스텀 에러 발생",
-    log_level="warning"
+추가되는 헤더:
+- `Strict-Transport-Security` (HSTS)
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `Content-Security-Policy`
+- `Referrer-Policy`
+
+---
+
+## 🛡️ 미들웨어
+
+### Request ID 미들웨어
+
+모든 요청에 고유 요청 ID를 추가합니다 (`X-Request-ID` 헤더).
+
+```python
+from fastapi_bootstrap import RequestIDMiddleware
+
+app.add_middleware(RequestIDMiddleware)
+```
+
+### Request Timing 미들웨어
+
+요청 처리 시간을 `X-Process-Time` 헤더로 추가합니다.
+
+```python
+from fastapi_bootstrap import RequestTimingMiddleware
+
+app.add_middleware(RequestTimingMiddleware)
+```
+
+### Max Request Size 미들웨어
+
+요청 본문 크기를 제한합니다.
+
+```python
+from fastapi_bootstrap import MaxRequestSizeMiddleware
+
+app.add_middleware(MaxRequestSizeMiddleware, max_size=10 * 1024 * 1024)  # 10MB
+```
+
+---
+
+## 🔐 인증 (선택)
+
+JWKS 검증을 지원하는 OIDC/JWT 인증. `pip install fastapi-bootstrap[auth]` 필요.
+
+```python
+from fastapi import Depends
+from fastapi_bootstrap import OIDCAuth, OIDCConfig
+
+auth = OIDCAuth(
+    OIDCConfig(
+        issuer="https://your-idp.com",
+        audience="your-api-audience",
+    )
+)
+
+@router.get("/protected")
+async def protected(token=Depends(auth)):
+    return {"user": token.sub}
+```
+
+---
+
+## ⚠️ 예외 처리
+
+일관된 에러 응답을 위한 내장 예외 클래스.
+
+```python
+from fastapi_bootstrap.exception import (
+    BadRequestException,
+    NotFoundException,
+    UnauthorizedException,
+    ForbiddenException,
+    InternalServerException,
+)
+
+@router.get("/users/{user_id}")
+async def get_user(user_id: int):
+    user = db.get(user_id)
+    if not user:
+        raise NotFoundException(detail="사용자를 찾을 수 없습니다")
+    return user
+```
+
+에러 응답 형식:
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "사용자를 찾을 수 없습니다"
+  }
+}
+```
+
+---
+
+## 🌐 CORS
+
+API에 CORS를 활성화합니다.
+
+```python
+from fastapi.middleware.cors import CORSMiddleware
+
+app = create_app([router], title="내 API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://myapp.com"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 ```
 
-### 커스텀 미들웨어
+---
 
-```python
-from starlette.middleware.base import BaseHTTPMiddleware
+## 📁 예제
 
-class CustomMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request, call_next):
-        # 전처리
-        response = await call_next(request)
-        # 후처리
-        return response
+완전한 예제는 [examples/](./examples/) 디렉토리를 참조하세요:
 
-app = create_app(
-    [router],
-    middlewares=[CustomMiddleware]
-)
-```
+| 예제 | 설명 |
+|------|------|
+| [simple](./examples/simple/) | 기본 사용법, 로깅 |
+| [cors](./examples/cors/) | CORS 설정 |
+| [auth](./examples/auth/) | OIDC 인증 |
+| [external_auth](./examples/external_auth/) | 외부 인증 제공자 |
 
 ---
 
-## 📚 예제
+## 🏥 헬스 체크
 
-[examples/](./examples/) 디렉토리에서 완전하고 실행 가능한 예제를 확인할 수 있습니다:
-
-### 1. [Simple Example](./examples/simple/)
-로깅, 응답 형식화, 페이지네이션을 포함한 기본 사용법.
+내장 헬스 체크 엔드포인트 `/health`:
 
 ```bash
-python examples/simple/app.py
-# http://localhost:8000/v1/docs 접속
+curl http://localhost:8000/health
+# {"status": "ok"}
 ```
-
-### 2. [Builder Example](./examples/builder/) *(NEW)*
-메트릭, 보안 헤더, request ID를 포함한 Fluent Builder API.
-
-```bash
-python examples/builder/app.py
-# http://localhost:8000/docs 접속
-# http://localhost:8000/metrics 에서 메트릭 확인
-```
-
-### 3. [Auth Example](./examples/auth/)
-역할 기반 접근 제어를 포함한 OIDC/Keycloak 인증.
-
-```bash
-# 환경 변수 설정
-export OIDC_ISSUER="https://keycloak.example.com/realms/myrealm"
-export OIDC_CLIENT_ID="my-api"
-
-python examples/auth/app.py
-# http://localhost:8000/v1/docs 접속
-```
-
-### 4. [CORS Example](./examples/cors/)
-환경별 CORS 설정 및 보안 모범 사례.
-
-```bash
-# 개발 환경
-python examples/cors/app.py
-
-# 프로덕션 환경
-STAGE=prod ALLOWED_ORIGINS="https://myapp.com" python examples/cors/app.py
-```
-
-### 5. [External Auth Example](./examples/external_auth/)
-API Gateway/Ingress 인증 및 Swagger UI Bearer token 지원.
-
-```bash
-python examples/external_auth/app.py
-# http://localhost:8000/docs 접속
-```
-
-자세한 내용은 [examples/README.md](./examples/README.md)를 참조하세요.
-
----
-
-## 🤝 기여하기
-
-기여는 환영합니다! Pull Request를 자유롭게 제출해 주세요.
 
 ---
 
 ## 📄 라이선스
 
-이 프로젝트는 MIT 라이선스로 제공됩니다 - 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
-
----
-
-## 🙏 감사의 말
-
-- [confee](https://github.com/bestend/confee)에서 영감을 받았습니다 - 올바른 설정 관리
-- [FastAPI](https://fastapi.tiangolo.com/)로 구축 - 현대적이고 빠른 웹 프레임워크
-- [Loguru](https://github.com/Delgan/loguru)로 로깅 - 간단한 Python 로깅
+MIT 라이선스 — [LICENSE](./LICENSE) 참조
 
 
 
