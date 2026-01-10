@@ -10,7 +10,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Status](https://img.shields.io/badge/status-alpha-yellow)](https://github.com/bestend/fastapi_bootstrap)
+[![Status](https://img.shields.io/badge/status-beta-brightgreen)](https://github.com/bestend/fastapi_bootstrap)
 [![Tests](https://github.com/bestend/fastapi_bootstrap/actions/workflows/tests.yml/badge.svg)](https://github.com/bestend/fastapi_bootstrap/actions/workflows/tests.yml)
 
 </div>
@@ -19,7 +19,7 @@
 
 ## ✨ Overview
 
-**FastAPI Bootstrap** is a production-ready FastAPI boilerplate that includes everything you need to build robust APIs quickly. It provides pre-configured logging, error handling, request/response tracking, and more out of the box.
+**FastAPI Bootstrap** is a production-ready FastAPI boilerplate that includes everything you need to build robust APIs quickly. It provides pre-configured logging, error handling, request/response tracking, metrics, security headers, and more out of the box.
 
 Stop writing the same boilerplate code for every FastAPI project. Start building features immediately with FastAPI Bootstrap.
 
@@ -36,6 +36,9 @@ Stop writing the same boilerplate code for every FastAPI project. Start building
 - **📚 Auto Documentation** — Automatic OpenAPI/Swagger UI generation
 - **🔧 Highly Configurable** — Customize logging, CORS, middleware, and more
 - **🚀 Production Ready** — Graceful shutdown, environment-based configuration
+- **📊 Prometheus Metrics** — Built-in metrics endpoint with request stats *(NEW)*
+- **🔒 Security Headers** — HSTS, CSP, X-Frame-Options middleware *(NEW)*
+- **🏗️ Builder Pattern** — Fluent API for intuitive app configuration *(NEW)*
 
 ---
 
@@ -43,6 +46,12 @@ Stop writing the same boilerplate code for every FastAPI project. Start building
 
 ```bash
 pip install fastapi_bootstrap
+
+# With authentication support
+pip install fastapi_bootstrap[auth]
+
+# With all optional dependencies
+pip install fastapi_bootstrap[all]
 ```
 
 ---
@@ -51,35 +60,48 @@ pip install fastapi_bootstrap
 
 See [examples/](./examples/) directory for complete, runnable examples.
 
-### Simple Example
-
-```bash
-# Run the example
-python examples/simple/app.py
-
-# Visit
-http://localhost:8000/v1/docs
-```
-
-### Basic Usage
-
+### Basic Usage (Traditional)
 
 ```python
 from fastapi import APIRouter
 from fastapi_bootstrap import create_app, LoggingAPIRoute
 
-# Create your API router
 router = APIRouter(route_class=LoggingAPIRoute)
 
 @router.get("/hello")
 async def hello():
     return {"message": "Hello, World!"}
 
-# Create the app with minimal configuration
 app = create_app(
     [router],
     title="My API",
     version="1.0.0",
+)
+```
+
+### Basic Usage (Builder Pattern) ✨ NEW
+
+```python
+from fastapi import APIRouter
+from fastapi_bootstrap import bootstrap, LoggingAPIRoute
+
+router = APIRouter(route_class=LoggingAPIRoute)
+
+@router.get("/hello")
+async def hello():
+    return {"message": "Hello, World!"}
+
+app = (
+    bootstrap()
+    .title("My API")
+    .version("1.0.0")
+    .stage("prod")
+    .with_cors(origins=["https://myapp.com"])
+    .with_security_headers()
+    .with_metrics()
+    .with_request_id()
+    .add_router(router)
+    .build()
 )
 ```
 
@@ -92,7 +114,7 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 ### With Full Configuration
 
 ```python
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi_bootstrap import create_app, LoggingAPIRoute, get_logger
 
 logger = get_logger()
@@ -106,18 +128,9 @@ async def hello():
 
 async def startup_handler(app):
     logger.info("Application starting up...")
-    # Initialize database, connections, etc.
 
 async def shutdown_handler(app):
     logger.info("Application shutting down...")
-    # Cleanup resources
-
-# Or without app parameter (both styles are supported)
-async def simple_startup():
-    logger.info("Simple startup...")
-
-async def simple_shutdown():
-    logger.info("Simple shutdown...")
 
 app = create_app(
     api_list=[router],
@@ -126,13 +139,126 @@ app = create_app(
     prefix_url="/api/v1",
     graceful_timeout=10,
     docs_enable=True,
-    docs_prefix_url="/api/v1",
     health_check_api="/healthz",
     startup_coroutines=[startup_handler],
     shutdown_coroutines=[shutdown_handler],
-    stage="prod",  # dev, staging, prod
+    stage="prod",
 )
 ```
+
+---
+
+## 🏗️ Builder Pattern (NEW in v0.2.0)
+
+The new Builder pattern provides a fluent, chainable API for configuring your FastAPI application:
+
+```python
+from fastapi_bootstrap import bootstrap
+
+app = (
+    bootstrap()
+    # Basic configuration
+    .title("My Production API")
+    .version("2.0.0")
+    .description("A production-ready API")
+    .stage("prod")
+    .prefix("/api/v2")
+    
+    # Logging configuration
+    .with_logging(level="INFO", json_output=True)
+    
+    # CORS configuration
+    .with_cors(
+        origins=["https://myapp.com", "https://admin.myapp.com"],
+        allow_credentials=True,
+    )
+    
+    # Security headers (HSTS, CSP, X-Frame-Options, etc.)
+    .with_security_headers(
+        hsts_max_age=31536000,
+        content_security_policy="default-src 'self'",
+    )
+    
+    # Prometheus metrics at /metrics
+    .with_metrics(endpoint="/metrics")
+    
+    # Request ID and timing headers
+    .with_request_id()
+    .with_request_timing()
+    
+    # Health check endpoint
+    .with_health_check(endpoint="/health")
+    
+    # Graceful shutdown
+    .with_graceful_shutdown(timeout=30)
+    
+    # Add routers
+    .add_router(users_router, prefix="/users")
+    .add_router(posts_router, prefix="/posts")
+    
+    # Lifecycle hooks
+    .on_startup(init_database)
+    .on_shutdown(cleanup_database)
+    
+    .build()
+)
+```
+
+---
+
+## 📊 Prometheus Metrics (NEW)
+
+Built-in Prometheus-compatible metrics endpoint:
+
+```python
+from fastapi_bootstrap import bootstrap, MetricsMiddleware, get_metrics_router
+
+# Using Builder pattern
+app = bootstrap().with_metrics().add_router(router).build()
+
+# Or manually
+app.add_middleware(MetricsMiddleware)
+app.include_router(get_metrics_router())
+```
+
+Visit `/metrics` to see:
+```
+# HELP fastapi_bootstrap_http_requests_total Total HTTP requests
+# TYPE fastapi_bootstrap_http_requests_total counter
+fastapi_bootstrap_http_requests_total{method="GET",path="/api/users",status="200"} 150
+
+# HELP fastapi_bootstrap_http_request_duration_seconds HTTP request duration
+# TYPE fastapi_bootstrap_http_request_duration_seconds histogram
+fastapi_bootstrap_http_request_duration_seconds_bucket{method="GET",path="/api/users",le="0.1"} 145
+...
+```
+
+---
+
+## 🔒 Security Headers (NEW)
+
+Automatic security headers middleware:
+
+```python
+from fastapi_bootstrap import SecurityHeadersMiddleware
+
+app.add_middleware(
+    SecurityHeadersMiddleware,
+    stage="prod",
+    hsts_max_age=31536000,
+    content_security_policy="default-src 'self'",
+    x_frame_options="DENY",
+)
+```
+
+Added headers:
+- `Strict-Transport-Security` (HSTS)
+- `Content-Security-Policy`
+- `X-Frame-Options`
+- `X-Content-Type-Options`
+- `X-XSS-Protection`
+- `Referrer-Policy`
+- `Permissions-Policy`
 
 ---
 
@@ -337,22 +463,25 @@ Basic usage with logging, response formatting, and pagination.
 
 ```bash
 python examples/simple/app.py
-# Visit http://localhost:8000/v1/docs
 ```
 
-### 2. [Auth Example](./examples/auth/)
+### 2. [Builder Example](./examples/builder/) ✨ NEW
+Builder pattern with metrics, security headers, and request tracking.
+
+```bash
+python examples/builder/app.py
+```
+
+### 3. [Auth Example](./examples/auth/)
 OIDC/Keycloak authentication with role-based access control.
 
 ```bash
-# Set up environment
 export OIDC_ISSUER="https://keycloak.example.com/realms/myrealm"
 export OIDC_CLIENT_ID="my-api"
-
 python examples/auth/app.py
-# Visit http://localhost:8000/v1/docs
 ```
 
-### 3. [CORS Example](./examples/cors/)
+### 4. [CORS Example](./examples/cors/)
 Environment-specific CORS configuration and security best practices.
 
 ```bash
@@ -363,12 +492,11 @@ python examples/cors/app.py
 STAGE=prod ALLOWED_ORIGINS="https://myapp.com" python examples/cors/app.py
 ```
 
-### 4. [External Auth Example](./examples/external_auth/)
+### 5. [External Auth Example](./examples/external_auth/)
 API Gateway/Ingress authentication with Swagger UI Bearer token support.
 
 ```bash
 python examples/external_auth/app.py
-# Visit http://localhost:8000/docs
 ```
 
 See [examples/README.md](./examples/README.md) for detailed documentation.

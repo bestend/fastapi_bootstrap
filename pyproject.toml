@@ -4,17 +4,17 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fastapi_bootstrap"
-version = "0.0.dev"  # Auto-updated by GitHub Actions when tag is pushed
-description = "🚀 Easy FastAPI Setup Kit - Production-ready FastAPI boilerplate with logging, error handling, and more"
+version = "0.2.0"  # Auto-updated by GitHub Actions when tag is pushed
+description = "🚀 Easy FastAPI Setup Kit - Production-ready FastAPI boilerplate with logging, error handling, metrics, security headers, and more"
 readme = "README.md"
 requires-python = ">=3.12"
 license = {text = "MIT"}
 authors = [
     {name = "JunSeok Kim", email = "infend@gmail.com"}
 ]
-keywords = ["fastapi", "logging", "error-handling", "api", "web", "framework", "production"]
+keywords = ["fastapi", "logging", "error-handling", "api", "web", "framework", "production", "metrics", "security", "opentelemetry"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
@@ -22,30 +22,39 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Framework :: FastAPI",
     "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Typing :: Typed",
 ]
 dependencies = [
-    "fastapi>=0.100.0",
-    "uvicorn>=0.20.0",
-    "pydantic>=2.0.0",
-    "loguru>=0.7.0",
-    "opentelemetry-api>=1.20.0",
-    "PyYAML>=6.0",
+    "fastapi>=0.109.0",
+    "uvicorn>=0.27.0",
+    "pydantic>=2.5.0",
+    "loguru>=0.7.2",
+    "opentelemetry-api>=1.22.0",
+    "PyYAML>=6.0.1",
 ]
 
 [project.optional-dependencies]
 auth = [
     "python-jose[cryptography]>=3.3.0",
-    "httpx>=0.24.0",
+    "httpx>=0.26.0",
+]
+metrics = [
+    # Future: prometheus-client if needed
+]
+all = [
+    "python-jose[cryptography]>=3.3.0",
+    "httpx>=0.26.0",
 ]
 dev = [
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "pytest-asyncio>=0.21.0",
-    "pytest-mock>=3.10.0",
-    "httpx>=0.24.0",
-    "ruff>=0.1.0",
-    "mypy>=1.0.0",
-    "types-PyYAML>=6.0.0",
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-mock>=3.12.0",
+    "httpx>=0.26.0",
+    "ruff>=0.2.0",
+    "mypy>=1.8.0",
+    "types-PyYAML>=6.0.12",
     "python-jose[cryptography]>=3.3.0",
 ]
 

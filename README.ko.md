@@ -10,7 +10,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Status](https://img.shields.io/badge/status-alpha-yellow)](https://github.com/bestend/fastapi_bootstrap)
+[![Status](https://img.shields.io/badge/status-beta-brightgreen)](https://github.com/bestend/fastapi_bootstrap)
 [![Tests](https://github.com/bestend/fastapi_bootstrap/actions/workflows/tests.yml/badge.svg)](https://github.com/bestend/fastapi_bootstrap/actions/workflows/tests.yml)
 
 </div>
@@ -19,7 +19,7 @@
 
 ## ✨ 개요
 
-**FastAPI Bootstrap**은 강력한 API를 빠르게 구축하는 데 필요한 모든 것을 포함하는 프로덕션 준비 FastAPI 보일러플레이트입니다. 사전 구성된 로깅, 에러 핸들링, 요청/응답 추적 등을 즉시 사용할 수 있습니다.
+**FastAPI Bootstrap**은 강력한 API를 빠르게 구축하는 데 필요한 모든 것을 포함하는 프로덕션 준비 FastAPI 보일러플레이트입니다. 사전 구성된 로깅, 에러 핸들링, 요청/응답 추적, 메트릭, 보안 헤더 등을 즉시 사용할 수 있습니다.
 
 매 FastAPI 프로젝트마다 같은 보일러플레이트 코드를 작성하는 것을 멈추세요. FastAPI Bootstrap으로 바로 기능 개발을 시작하세요.
 
@@ -36,6 +36,9 @@
 - **📚 자동 문서화** — 자동 OpenAPI/Swagger UI 생성
 - **🔧 높은 설정성** — 로깅, CORS, 미들웨어 등을 커스터마이징 가능
 - **🚀 프로덕션 준비** — Graceful shutdown, 환경 기반 설정
+- **📊 Prometheus 메트릭** — 요청 통계가 포함된 내장 메트릭 엔드포인트 *(NEW)*
+- **🔒 보안 헤더** — HSTS, CSP, X-Frame-Options 미들웨어 *(NEW)*
+- **🏗️ Builder 패턴** — 직관적인 앱 설정을 위한 Fluent API *(NEW)*
 
 ---
 
@@ -43,6 +46,12 @@
 
 ```bash
 pip install fastapi_bootstrap
+
+# 인증 지원 포함
+pip install fastapi_bootstrap[auth]
+
+# 모든 선택적 의존성 포함
+pip install fastapi_bootstrap[all]
 ```
 
 ---
@@ -51,34 +60,48 @@ pip install fastapi_bootstrap
 
 완전한 예제는 [examples/](./examples/) 디렉토리를 참조하세요.
 
-### 간단한 예제
-
-```bash
-# 예제 실행
-python examples/simple/app.py
-
-# 접속
-http://localhost:8000/v1/docs
-```
-
-### 기본 사용법
+### 기본 사용법 (전통적 방식)
 
 ```python
 from fastapi import APIRouter
 from fastapi_bootstrap import create_app, LoggingAPIRoute
 
-# API 라우터 생성
 router = APIRouter(route_class=LoggingAPIRoute)
 
 @router.get("/hello")
 async def hello():
     return {"message": "안녕하세요!"}
 
-# 최소 설정으로 앱 생성
 app = create_app(
     [router],
     title="내 API",
     version="1.0.0",
+)
+```
+
+### 기본 사용법 (Builder 패턴) ✨ NEW
+
+```python
+from fastapi import APIRouter
+from fastapi_bootstrap import bootstrap, LoggingAPIRoute
+
+router = APIRouter(route_class=LoggingAPIRoute)
+
+@router.get("/hello")
+async def hello():
+    return {"message": "안녕하세요!"}
+
+app = (
+    bootstrap()
+    .title("내 API")
+    .version("1.0.0")
+    .stage("prod")
+    .with_cors(origins=["https://myapp.com"])
+    .with_security_headers()
+    .with_metrics()
+    .with_request_id()
+    .add_router(router)
+    .build()
 )
 ```
 
@@ -88,7 +111,74 @@ app = create_app(
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-### 전체 설정 예제
+---
+
+## 🏗️ Builder 패턴 *(NEW)*
+
+Fluent API로 직관적인 앱 설정:
+
+```python
+from fastapi_bootstrap import bootstrap, FastAPIBootstrap
+
+# Fluent 체이닝
+app = (
+    bootstrap()
+    .title("내 API")
+    .version("1.0.0")
+    .stage("prod")
+    .with_cors(origins=["https://myapp.com"])
+    .with_security_headers()
+    .with_metrics(endpoint="/metrics")
+    .with_request_id()
+    .with_request_timing()
+    .add_router(router)
+    .build()
+)
+
+# 또는 환경 설정에서 자동 구성
+from fastapi_bootstrap.config import get_settings
+settings = get_settings()
+app = FastAPIBootstrap.from_settings(settings).build()
+```
+
+---
+
+## 📊 Prometheus 메트릭 *(NEW)*
+
+```python
+from fastapi_bootstrap import bootstrap
+
+app = bootstrap().title("내 API").with_metrics().build()
+
+# GET /metrics 에서 확인:
+# http_requests_total{method="GET", path="/hello", status="200"} 42
+# http_request_duration_seconds_bucket{le="0.1"} 35
+```
+
+---
+
+## 🔒 보안 헤더 *(NEW)*
+
+```python
+app = (
+    bootstrap()
+    .with_security_headers(
+        hsts_max_age=31536000,  # 1년
+        content_security_policy="default-src 'self'",
+        frame_options="DENY",
+    )
+    .build()
+)
+
+# 응답 헤더:
+# Strict-Transport-Security: max-age=31536000; includeSubDomains
+# X-Content-Type-Options: nosniff
+# X-Frame-Options: DENY
+```
+
+---
+
+## ⚙️ 전체 설정 예제
 
 ```python
 from fastapi import APIRouter
@@ -337,7 +427,16 @@ python examples/simple/app.py
 # http://localhost:8000/v1/docs 접속
 ```
 
-### 2. [Auth Example](./examples/auth/)
+### 2. [Builder Example](./examples/builder/) *(NEW)*
+메트릭, 보안 헤더, request ID를 포함한 Fluent Builder API.
+
+```bash
+python examples/builder/app.py
+# http://localhost:8000/docs 접속
+# http://localhost:8000/metrics 에서 메트릭 확인
+```
+
+### 3. [Auth Example](./examples/auth/)
 역할 기반 접근 제어를 포함한 OIDC/Keycloak 인증.
 
 ```bash
@@ -349,7 +448,7 @@ python examples/auth/app.py
 # http://localhost:8000/v1/docs 접속
 ```
 
-### 3. [CORS Example](./examples/cors/)
+### 4. [CORS Example](./examples/cors/)
 환경별 CORS 설정 및 보안 모범 사례.
 
 ```bash
@@ -360,7 +459,7 @@ python examples/cors/app.py
 STAGE=prod ALLOWED_ORIGINS="https://myapp.com" python examples/cors/app.py
 ```
 
-### 4. [External Auth Example](./examples/external_auth/)
+### 5. [External Auth Example](./examples/external_auth/)
 API Gateway/Ingress 인증 및 Swagger UI Bearer token 지원.
 
 ```bash

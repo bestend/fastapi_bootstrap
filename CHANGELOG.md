@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-01-10
+
+### Added
+
+#### Builder Pattern API
+- `FastAPIBootstrap` - Fluent builder pattern for intuitive app configuration
+- `bootstrap()` - Convenience function to create builder instance
+- Chainable methods: `.title()`, `.version()`, `.stage()`, `.prefix()`, `.with_*()`, `.add_router()`, `.build()`
+
+#### Configuration Management
+- `BootstrapSettings` - Centralized Pydantic-based configuration class
+- `LoggingSettings`, `CORSSettings`, `SecuritySettings` - Typed configuration models
+- `get_settings()` - Cached settings loader from environment variables
+- `mask_sensitive_data()` - Utility for masking sensitive fields in logs
+
+#### Security Middleware
+- `SecurityHeadersMiddleware` - HSTS, CSP, X-Frame-Options, X-Content-Type-Options
+- `RequestIDMiddleware` - Automatic request ID generation and propagation
+- `RequestTimingMiddleware` - Response time tracking (X-Response-Time header)
+- `MaxRequestSizeMiddleware` - Request body size limiting
+
+#### Prometheus Metrics
+- `MetricsMiddleware` - Automatic request metrics collection
+- `get_metrics_router()` - Prometheus-compatible `/metrics` endpoint
+- `MetricsRegistry` - Counter, Gauge, Histogram implementations
+- Request count, latency histogram, in-progress requests, error tracking
+
+#### New Examples
+- `examples/builder/` - Builder pattern usage example
+
+### Changed
+- Updated minimum dependency versions for better compatibility
+- Status upgraded from Alpha to Beta
+- Enhanced `__init__.py` exports for easier imports
+
+### Fixed
+- Various type hints improvements
+
+## [0.1.2] - 2026-01-05
+
+### Fixed
+- Minor bug fixes and improvements
+
 ## [0.1.1] - 2026-01-02
 
 ### Changed
