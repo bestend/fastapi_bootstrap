@@ -441,7 +441,13 @@ def mask_sensitive_data(data: Any, sensitive_fields: list[str] | None = None) ->
 
     Args:
         data: Data structure to mask (dict, list, or primitive)
-        sensitive_fields: List of field names to mask. If None, uses defaults.
+        sensitive_fields: List of field names to mask. If None, loads from
+            get_settings().security.mask_sensitive_fields (cached via @lru_cache).
+
+    Note:
+        When sensitive_fields is None, this function calls get_settings() which
+        requires BootstrapSettings to be loadable from environment. For standalone
+        usage without environment configuration, provide explicit sensitive_fields.
 
     Returns:
         Data structure with sensitive values replaced with "***MASKED***"

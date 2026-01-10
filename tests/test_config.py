@@ -120,6 +120,8 @@ class TestBootstrapSettings:
             },
             clear=False,
         ):
+            # Clear cache for test isolation
+            get_settings.cache_clear()
             settings = BootstrapSettings.from_env()
             assert "https://a.com" in settings.cors.origins
             assert "https://b.com" in settings.cors.origins

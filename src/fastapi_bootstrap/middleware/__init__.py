@@ -231,6 +231,12 @@ class MaxRequestSizeMiddleware:
 
     Returns 413 Payload Too Large if request body exceeds the limit.
 
+    Note:
+        This middleware checks the Content-Length header. For chunked transfer
+        encoding (no Content-Length), the request will be allowed through.
+        For complete protection against oversized chunked requests, consider
+        using a reverse proxy (nginx, traefik) with body size limits.
+
     Example:
         ```python
         from fastapi_bootstrap.middleware import MaxRequestSizeMiddleware

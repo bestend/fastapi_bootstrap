@@ -376,10 +376,11 @@ class MetricsMiddleware(BaseHTTPMiddleware):
             # Record request count
             self.registry.get_request_count(method, path_template, status_code).inc()
 
-            # Record errors
-            if error_type or status_code >= 500:
-                error_label = error_type or "http_5xx"
-                self.registry.get_error_count(method, path_template, error_label).inc()
+            # Record errors (avoid double-counting: exception OR 5xx, not both)
+            if error_type:
+                self.registry.get_error_count(method, path_template, error_type).inc()
+            elif status_code >= 500:
+                self.registry.get_error_count(method, path_template, "http_5xx").inc()
 
             # Decrement in-progress
             in_progress.dec()

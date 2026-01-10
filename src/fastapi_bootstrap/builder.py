@@ -411,6 +411,12 @@ class FastAPIBootstrap:
 
         Returns:
             Self for chaining
+
+        Note:
+            When prefix or dependencies are specified, routes are copied to a
+            new router. Router-level properties (tags, responses, callbacks)
+            should be set on individual routes or use FastAPI's include_router
+            directly for complex configurations.
         """
         self._routers.append((router, prefix, dependencies))
         return self

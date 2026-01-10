@@ -3,6 +3,9 @@ requires = ["setuptools>=65.0", "setuptools-scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
+# Distribution name uses underscore for backward compatibility
+# pip install fastapi-bootstrap (hyphen) also works
+# Python import: import fastapi_bootstrap
 name = "fastapi_bootstrap"
 version = "0.0.dev"  # Auto-updated by GitHub Actions when tag is pushed
 description = "🚀 Easy FastAPI Setup Kit - Production-ready FastAPI boilerplate with logging, error handling, metrics, security headers, and more"
