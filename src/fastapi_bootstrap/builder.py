@@ -107,7 +107,9 @@ class FastAPIBootstrap:
         self._security_headers_config: dict[str, Any] = {}
         self._enable_metrics: bool = False
         self._enable_request_id: bool = False
+        self._request_id_header: str = "X-Request-ID"
         self._enable_request_timing: bool = False
+        self._request_timing_header: str = "X-Response-Time"
 
     def title(self, title: str) -> Self:
         """Set the API title.
@@ -345,6 +347,7 @@ class FastAPIBootstrap:
             Self for chaining
         """
         self._enable_request_id = True
+        self._request_id_header = header_name
         return self
 
     def with_request_timing(self, header_name: str = "X-Response-Time") -> Self:
@@ -357,6 +360,7 @@ class FastAPIBootstrap:
             Self for chaining
         """
         self._enable_request_timing = True
+        self._request_timing_header = header_name
         return self
 
     def with_auth(self, oidc_config: Any, enable_swagger_ui: bool = True) -> Self:
@@ -535,13 +539,13 @@ class FastAPIBootstrap:
         if self._enable_request_id:
             from fastapi_bootstrap.middleware import RequestIDMiddleware
 
-            app.add_middleware(RequestIDMiddleware)
+            app.add_middleware(RequestIDMiddleware, header_name=self._request_id_header)
 
         # Add request timing middleware if enabled
         if self._enable_request_timing:
             from fastapi_bootstrap.middleware import RequestTimingMiddleware
 
-            app.add_middleware(RequestTimingMiddleware)
+            app.add_middleware(RequestTimingMiddleware, header_name=self._request_timing_header)
 
         # Add metrics middleware if enabled
         if self._enable_metrics:

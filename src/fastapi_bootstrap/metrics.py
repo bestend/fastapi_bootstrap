@@ -32,10 +32,16 @@ class Histogram:
     """
 
     buckets: tuple[float, ...] = (0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0)
-    _counts: dict[float, int] = field(default_factory=lambda: defaultdict(int))
     _sum: float = 0.0
     _count: int = 0
     _lock: Lock = field(default_factory=Lock)
+    _counts: dict[float, int] = field(default_factory=dict)  # Per-instance dict, not shared
+
+    def __post_init__(self) -> None:
+        """Initialize per-bucket counts to 0."""
+        for bucket in self.buckets:
+            if bucket not in self._counts:
+                self._counts[bucket] = 0
 
     def observe(self, value: float) -> None:
         """Record an observation.

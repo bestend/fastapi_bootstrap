@@ -86,17 +86,17 @@ class TestHistogram:
         assert histogram.sum == 0.6
 
     def test_bucket_counts(self):
-        """Histogram should count buckets correctly."""
+        """Histogram should count buckets correctly (cumulative)."""
         histogram = Histogram()
-        histogram.observe(0.005)  # First bucket
-        histogram.observe(0.05)  # 4th bucket
-        histogram.observe(1.0)  # 8th bucket
+        histogram.observe(0.005)  # 1st bucket (0.005)
+        histogram.observe(0.05)  # 4th bucket (0.05)
+        histogram.observe(1.0)  # 8th bucket (1.0)
 
         buckets = histogram.get_bucket_counts()
-        # Cumulative counts
-        assert buckets[0.005] >= 1
-        assert buckets[0.05] >= 2
-        assert buckets[1.0] >= 3
+        # Cumulative counts: each bucket includes all observations <= bucket boundary
+        assert buckets[0.005] == 1  # Only the 0.005 observation
+        assert buckets[0.05] == 2  # 0.005 + 0.05 observations
+        assert buckets[1.0] == 3  # All three observations
 
 
 class TestMetricsRegistry:
