@@ -1,11 +1,6 @@
 """Tests for logging setup and configuration."""
 
-import json
-import os
-from io import StringIO
-from unittest.mock import patch
-
-import pytest
+import logging
 
 from fastapi_bootstrap.log.setup import (
     LOG_JSON,

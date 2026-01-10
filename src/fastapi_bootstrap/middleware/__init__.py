@@ -50,6 +50,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         content_security_policy: str | None = None,
         x_frame_options: str = "DENY",
         x_content_type_options: str = "nosniff",
+        x_xss_protection: str | None = None,  # Deprecated header, disabled by default
         referrer_policy: str = "strict-origin-when-cross-origin",
         permissions_policy: str | None = None,
         enable_in_dev: bool = False,
@@ -65,6 +66,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             content_security_policy: CSP header value (None to disable)
             x_frame_options: X-Frame-Options value (DENY, SAMEORIGIN, or None)
             x_content_type_options: X-Content-Type-Options value
+            x_xss_protection: X-XSS-Protection value (deprecated, None by default)
             referrer_policy: Referrer-Policy value
             permissions_policy: Permissions-Policy value (None for default)
             enable_in_dev: Enable security headers in development mode
@@ -77,6 +79,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         self.content_security_policy = content_security_policy
         self.x_frame_options = x_frame_options
         self.x_content_type_options = x_content_type_options
+        self.x_xss_protection = x_xss_protection
         self.referrer_policy = referrer_policy
         self.permissions_policy = permissions_policy or "geolocation=(), microphone=(), camera=()"
         self.enable_in_dev = enable_in_dev
@@ -90,8 +93,11 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         if self.stage == "dev" and not self.enable_in_dev:
             return response
 
-        # HSTS (only for HTTPS)
-        if self.hsts_max_age > 0:
+        # HSTS (only for HTTPS connections)
+        is_https = (
+            request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https"
+        )
+        if self.hsts_max_age > 0 and is_https:
             hsts_value = f"max-age={self.hsts_max_age}"
             if self.hsts_include_subdomains:
                 hsts_value += "; includeSubDomains"
@@ -111,8 +117,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         if self.x_content_type_options:
             response.headers["X-Content-Type-Options"] = self.x_content_type_options
 
-        # X-XSS-Protection (legacy but still useful)
-        response.headers["X-XSS-Protection"] = "1; mode=block"
+        # X-XSS-Protection (deprecated, only add if explicitly enabled)
+        if self.x_xss_protection:
+            response.headers["X-XSS-Protection"] = self.x_xss_protection
 
         # Referrer-Policy
         if self.referrer_policy:

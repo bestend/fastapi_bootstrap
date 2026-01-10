@@ -17,7 +17,6 @@ from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from threading import Lock
-from typing import Any
 
 from fastapi import APIRouter, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -263,29 +262,29 @@ class MetricsRegistry:
         return "\n".join(lines)
 
 
-# Global metrics registry
-_metrics_registry: MetricsRegistry | None = None
+# Global metrics registries keyed by app_name
+_metrics_registries: dict[str, MetricsRegistry] = {}
 
 
 def get_metrics_registry(app_name: str = "fastapi_bootstrap") -> MetricsRegistry:
-    """Get the global metrics registry.
+    """Get the global metrics registry for an app.
 
     Args:
         app_name: Application name for metric prefixes
 
     Returns:
-        The global MetricsRegistry instance
+        The MetricsRegistry instance for the given app_name
     """
-    global _metrics_registry
-    if _metrics_registry is None:
-        _metrics_registry = MetricsRegistry(app_name)
-    return _metrics_registry
+    global _metrics_registries
+    if app_name not in _metrics_registries:
+        _metrics_registries[app_name] = MetricsRegistry(app_name)
+    return _metrics_registries[app_name]
 
 
 def reset_metrics_registry() -> None:
-    """Reset the global metrics registry (for testing)."""
-    global _metrics_registry
-    _metrics_registry = None
+    """Reset all global metrics registries (for testing)."""
+    global _metrics_registries
+    _metrics_registries = {}
 
 
 class MetricsMiddleware(BaseHTTPMiddleware):

@@ -135,10 +135,9 @@ app = (
     .build()
 )
 
-# 또는 환경 설정에서 자동 구성
-from fastapi_bootstrap.config import get_settings
-settings = get_settings()
-app = FastAPIBootstrap.from_settings(settings).build()
+# 또는 환경 설정에서 구성
+from fastapi_bootstrap.config import BootstrapSettings
+settings = BootstrapSettings()  # 환경변수에서 자동 로드
 ```
 
 ---
@@ -165,7 +164,7 @@ app = (
     .with_security_headers(
         hsts_max_age=31536000,  # 1년
         content_security_policy="default-src 'self'",
-        frame_options="DENY",
+        x_frame_options="DENY",
     )
     .build()
 )

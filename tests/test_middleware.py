@@ -1,6 +1,5 @@
 """Tests for security middleware."""
 
-import pytest
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
@@ -16,7 +15,7 @@ class TestSecurityHeadersMiddleware:
     """Tests for SecurityHeadersMiddleware."""
 
     def test_adds_security_headers_in_prod(self):
-        """Security headers should be added in production."""
+        """Security headers should be added in production (except HSTS on HTTP)."""
         app = FastAPI()
         app.add_middleware(SecurityHeadersMiddleware, stage="prod")
 
@@ -28,11 +27,28 @@ class TestSecurityHeadersMiddleware:
         response = client.get("/test")
 
         assert response.status_code == 200
-        assert "Strict-Transport-Security" in response.headers
+        # HSTS is only added for HTTPS connections, TestClient uses HTTP
+        assert "Strict-Transport-Security" not in response.headers
         assert "X-Frame-Options" in response.headers
         assert response.headers["X-Frame-Options"] == "DENY"
         assert "X-Content-Type-Options" in response.headers
         assert response.headers["X-Content-Type-Options"] == "nosniff"
+
+    def test_adds_hsts_on_https(self):
+        """HSTS header should be added when X-Forwarded-Proto is https."""
+        app = FastAPI()
+        app.add_middleware(SecurityHeadersMiddleware, stage="prod")
+
+        @app.get("/test")
+        async def test_endpoint():
+            return {"status": "ok"}
+
+        client = TestClient(app)
+        # Simulate HTTPS via proxy header
+        response = client.get("/test", headers={"X-Forwarded-Proto": "https"})
+
+        assert response.status_code == 200
+        assert "Strict-Transport-Security" in response.headers
 
     def test_skips_headers_in_dev_by_default(self):
         """Security headers should be skipped in dev by default."""
@@ -59,7 +75,8 @@ class TestSecurityHeadersMiddleware:
             return {"status": "ok"}
 
         client = TestClient(app)
-        response = client.get("/test")
+        # Simulate HTTPS via proxy header
+        response = client.get("/test", headers={"X-Forwarded-Proto": "https"})
 
         assert "Strict-Transport-Security" in response.headers
 
@@ -98,7 +115,8 @@ class TestSecurityHeadersMiddleware:
             return {"status": "ok"}
 
         client = TestClient(app)
-        response = client.get("/test")
+        # Simulate HTTPS via proxy header
+        response = client.get("/test", headers={"X-Forwarded-Proto": "https"})
 
         hsts = response.headers["Strict-Transport-Security"]
         assert "max-age=3600" in hsts

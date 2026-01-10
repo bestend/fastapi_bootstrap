@@ -1,10 +1,8 @@
 """Tests for Builder pattern API."""
 
-import pytest
 from fastapi import APIRouter
 from fastapi.testclient import TestClient
 
-from fastapi_bootstrap import LoggingAPIRoute
 from fastapi_bootstrap.builder import FastAPIBootstrap, bootstrap
 from fastapi_bootstrap.config import Stage
 

@@ -38,7 +38,6 @@ from fastapi_bootstrap.config import (
     LoggingSettings,
     MetricsSettings,
     RateLimitSettings,
-    SecuritySettings,
     Stage,
 )
 
@@ -471,13 +470,17 @@ class FastAPIBootstrap:
         Returns:
             Configured FastAPI application instance
         """
-        # Prepare routers - combine with individual prefixes
+        # Prepare routers - combine with individual prefixes and dependencies
         api_list = []
         for router, prefix, deps in self._routers:
-            if prefix:
-                # Create a new router with the combined prefix
+            if prefix or deps:
+                # Create a new router with the combined prefix and dependencies
                 combined_router = APIRouter()
-                combined_router.include_router(router, prefix=prefix)
+                combined_router.include_router(
+                    router,
+                    prefix=prefix or "",
+                    dependencies=deps or [],
+                )
                 api_list.append(combined_router)
             else:
                 api_list.append(router)

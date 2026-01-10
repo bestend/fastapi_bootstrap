@@ -184,10 +184,10 @@ class TestMetricsMiddleware:
         client.get("/health")
         client.get("/api/data")
 
-        # Health endpoint should be excluded
+        # Health endpoint should be excluded, api/data should be included
         registry = get_metrics_registry()
         output = registry.export()
-        assert "/health" not in output or "api/data" in output
+        assert "/health" not in output and "/api/data" in output
 
 
 class TestMetricsRouter:
