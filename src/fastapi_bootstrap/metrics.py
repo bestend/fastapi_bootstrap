@@ -271,12 +271,15 @@ class MetricsRegistry:
         return "\n".join(lines)
 
 
-# Global metrics registries keyed by app_name
+# Global metrics registries keyed by app_name (with thread-safe access)
 _metrics_registries: dict[str, MetricsRegistry] = {}
+_registry_lock = Lock()
 
 
 def get_metrics_registry(app_name: str = "fastapi_bootstrap") -> MetricsRegistry:
     """Get the global metrics registry for an app.
+
+    Thread-safe: uses double-checked locking pattern with explicit lock.
 
     Args:
         app_name: Application name for metric prefixes
@@ -285,9 +288,15 @@ def get_metrics_registry(app_name: str = "fastapi_bootstrap") -> MetricsRegistry
         The MetricsRegistry instance for the given app_name
     """
     global _metrics_registries
-    if app_name not in _metrics_registries:
-        _metrics_registries[app_name] = MetricsRegistry(app_name)
-    return _metrics_registries[app_name]
+    # Fast path: check without lock
+    if app_name in _metrics_registries:
+        return _metrics_registries[app_name]
+
+    # Slow path: acquire lock and double-check
+    with _registry_lock:
+        if app_name not in _metrics_registries:
+            _metrics_registries[app_name] = MetricsRegistry(app_name)
+        return _metrics_registries[app_name]
 
 
 def reset_metrics_registry() -> None:
@@ -335,7 +344,14 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
         This ensures /users/123 and /users/456 are grouped as /users/{id}
         """
-        # Try to find matching route
+        # First, try to use the route that Starlette/FastAPI has already matched
+        route = request.scope.get("route")
+        if route is not None:
+            path = getattr(route, "path", None)
+            if path:
+                return path
+
+        # Fallback: iterate routes to find matching one (for non-standard scopes)
         for route in request.app.routes:
             match, _ = route.matches(request.scope)
             if match == Match.FULL:

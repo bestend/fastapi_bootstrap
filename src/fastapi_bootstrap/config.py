@@ -24,7 +24,7 @@ from enum import Enum
 from functools import lru_cache
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class Stage(str, Enum):
@@ -83,8 +83,25 @@ class LoggingSettings(BaseModel):
         valid_levels = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
         normalized = v.upper()
         if normalized not in valid_levels:
-            raise ValueError(f"Invalid log level: {v}. Must be one of {valid_levels}")
+            raise ValueError(
+                f"Invalid log level: '{v}' (normalized: '{normalized}'). "
+                f"Must be one of {sorted(valid_levels)}"
+            )
         return normalized
+
+    @model_validator(mode="after")
+    def validate_format_consistency(self) -> "LoggingSettings":
+        """Warn if json_output conflicts with format setting."""
+        import warnings
+
+        if self.json_output and self.format == LogFormat.TEXT:
+            warnings.warn(
+                "LoggingSettings has json_output=True but format=TEXT. "
+                "The 'json_output' field is deprecated; use format=LogFormat.JSON instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        return self
 
 
 class CORSSettings(BaseModel):
@@ -336,15 +353,13 @@ class BootstrapSettings(BaseModel):
             "yes",
         )
 
-        # Validate CORS configuration
+        # Validate CORS configuration - browsers reject credentials with wildcard
         if allow_credentials and "*" in cors_origins:
-            import warnings
-
-            warnings.warn(
-                "CORS allow_credentials=True with origins=['*'] is insecure. "
-                "In production, specify explicit origins instead.",
-                UserWarning,
-                stacklevel=2,
+            raise ValueError(
+                "Invalid CORS configuration: allow_credentials=True cannot be used "
+                'with origins containing "*". Per the CORS specification, browsers '
+                "will reject this combination. Configure explicit origins instead, "
+                'e.g. CORS_ORIGINS="https://example.com,https://api.example.com"'
             )
 
         cors_settings = CORSSettings(

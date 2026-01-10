@@ -74,10 +74,11 @@ class TestFastAPIBootstrap:
         app = FastAPIBootstrap().with_health_check(endpoint="/health").build()
 
         client = TestClient(app)
-        # Default health check - verify endpoint is accessible
-        # Note: health endpoint is still at /healthz by default in create_app
-        # The builder sets the setting but create_app uses health_check_api parameter
-        assert client.get("/health").status_code in (200, 404)
+        # The builder sets health_check_api parameter which creates the endpoint
+        response = client.get("/health")
+        assert response.status_code == 200
+        # Health endpoint returns plain text "healthy" or JSON based on implementation
+        assert "healthy" in response.text.lower() or response.status_code == 200
 
     def test_chaining(self):
         """All methods should return self for chaining."""

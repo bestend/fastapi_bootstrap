@@ -66,7 +66,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             content_security_policy: CSP header value (None to disable)
             x_frame_options: X-Frame-Options value (DENY, SAMEORIGIN, or None)
             x_content_type_options: X-Content-Type-Options value
-            x_xss_protection: X-XSS-Protection value (deprecated, None by default)
+            x_xss_protection: X-XSS-Protection value. DEPRECATED: This header is
+                removed from modern browsers (Chrome 78+, Edge 79+, Firefox 70+)
+                in favor of Content-Security-Policy. Default is None (disabled).
+                Only set this if you need to support legacy browsers.
             referrer_policy: Referrer-Policy value
             permissions_policy: Permissions-Policy value (None for default)
             enable_in_dev: Enable security headers in development mode
