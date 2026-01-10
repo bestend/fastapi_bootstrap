@@ -194,7 +194,7 @@ class MetricsSettings(BaseModel):
     """Metrics and monitoring configuration."""
 
     enabled: bool = Field(
-        default=True,
+        default=False,
         description="Enable metrics endpoint",
     )
     endpoint: str = Field(
@@ -330,7 +330,7 @@ class BootstrapSettings(BaseModel):
 
         # Parse metrics settings
         metrics_settings = MetricsSettings(
-            enabled=os.getenv("METRICS_ENABLED", "true").lower() in ("true", "1", "yes"),
+            enabled=os.getenv("METRICS_ENABLED", "false").lower() in ("true", "1", "yes"),
             endpoint=os.getenv("METRICS_ENDPOINT", "/metrics"),
         )
 

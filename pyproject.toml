@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fastapi_bootstrap"
-version = "0.2.0"  # Auto-updated by GitHub Actions when tag is pushed
+version = "0.0.dev"  # Auto-updated by GitHub Actions when tag is pushed
 description = "🚀 Easy FastAPI Setup Kit - Production-ready FastAPI boilerplate with logging, error handling, metrics, security headers, and more"
 readme = "README.md"
 requires-python = ">=3.12"
