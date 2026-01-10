@@ -13,9 +13,9 @@ Example:
 """
 
 import time
-from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from enum import Enum
 from threading import Lock
 
 from fastapi import APIRouter, Request, Response
@@ -361,8 +361,8 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         for route in request.app.routes:
             match, _ = route.matches(request.scope)
             if match == Match.FULL:
-                return getattr(route, "path", request.url.path)
-        return request.url.path
+                return getattr(route, "path", "/__unmatched__")
+        return "/__unmatched__"
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Process the request and collect metrics."""
@@ -411,7 +411,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 def get_metrics_router(
     path: str = "/metrics",
     include_in_schema: bool = False,
-    tags: list[str] | None = None,
+    tags: list[str | Enum] | None = None,
 ) -> APIRouter:
     """Create a router with the metrics endpoint.
 
@@ -431,7 +431,8 @@ def get_metrics_router(
         # Metrics available at GET /metrics
         ```
     """
-    router = APIRouter(tags=tags or ["monitoring"])
+    default_tags: list[str | Enum] = ["monitoring"]
+    router = APIRouter(tags=tags or default_tags)
 
     @router.get(path, include_in_schema=include_in_schema)
     async def metrics() -> Response:

@@ -1,7 +1,5 @@
 """Tests for logging setup and configuration."""
 
-import logging
-
 from fastapi_bootstrap.log.setup import (
     LOG_JSON,
     LOG_LEVEL,
@@ -142,3 +140,84 @@ class TestLogFormatting:
 
         assert result["level1"]["level2"]["level3"]["level4"]["long_string"] == "[[truncated]]"
         assert result["level1"]["level2"]["level3"]["level4"]["short_string"] == "hello"
+
+
+class TestTruncateStringsImmutability:
+    """Tests verifying truncate_strings_in_structure does not mutate input."""
+
+    def test_dict_not_mutated(self):
+        """Original dict should not be modified."""
+        original = {"key": "x" * 3000}
+        original_copy = {"key": "x" * 3000}
+
+        truncate_strings_in_structure(original)
+
+        assert original == original_copy
+        assert original["key"] == "x" * 3000
+
+    def test_nested_dict_not_mutated(self):
+        """Nested dicts should not be modified."""
+        original = {
+            "outer": {"inner": "y" * 3000},
+            "short": "hello",
+        }
+        inner_original = original["outer"]["inner"]
+
+        result = truncate_strings_in_structure(original)
+
+        assert original["outer"]["inner"] == inner_original
+        assert result["outer"]["inner"] == "[[truncated]]"
+        assert original["outer"]["inner"] != result["outer"]["inner"]
+
+    def test_list_not_mutated(self):
+        """Original list should not be modified."""
+        original = ["x" * 3000, "short"]
+        original_first = original[0]
+
+        result = truncate_strings_in_structure(original)
+
+        assert original[0] == original_first
+        assert result[0] == "[[truncated]]"
+        assert original[0] != result[0]
+
+    def test_nested_list_not_mutated(self):
+        """Nested lists should not be modified."""
+        original = [["a" * 3000, "b"], "c"]
+        original_nested_first = original[0][0]
+
+        result = truncate_strings_in_structure(original)
+
+        assert original[0][0] == original_nested_first
+        assert result[0][0] == "[[truncated]]"
+
+    def test_mixed_structure_not_mutated(self):
+        """Complex mixed structures should not be modified."""
+        original = {
+            "list": ["x" * 3000],
+            "nested": {"deep": {"value": "y" * 3000}},
+        }
+        import copy
+
+        original_copy = copy.deepcopy(original)
+
+        result = truncate_strings_in_structure(original)
+
+        assert original == original_copy
+        assert result["list"][0] == "[[truncated]]"
+        assert result["nested"]["deep"]["value"] == "[[truncated]]"
+        assert original["list"][0] == "x" * 3000
+        assert original["nested"]["deep"]["value"] == "y" * 3000
+
+    def test_result_is_different_object(self):
+        """Result should be a different object from input."""
+        original = {"key": "value"}
+        result = truncate_strings_in_structure(original)
+
+        assert result is not original
+
+    def test_nested_result_is_different_object(self):
+        """Nested structures in result should be different objects."""
+        original = {"outer": {"inner": "value"}}
+        result = truncate_strings_in_structure(original)
+
+        assert result["outer"] is not original["outer"]

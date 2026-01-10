@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse
 from fastapi_bootstrap.exception import ErrorInfo
 from fastapi_bootstrap.exception.definition import get_exception_definitions
 from fastapi_bootstrap.log import get_logger
+from fastapi_bootstrap.response import ResponseFormatter
 from fastapi_bootstrap.util import get_trace_id
 
 logger = get_logger()
@@ -67,29 +68,29 @@ async def _generate_error_response_core(
     # Log the exception with the specified log level
     getattr(logger.opt(exception=exc), error_info.log_level)(str(exc))
 
-    # Handle HTTPException specially (use its detail and status code)
+    details: object | None = None
+
     if isinstance(exc, HTTPException):
-        content = {"msg": exc.detail}
+        message = str(exc.detail)
         status_code = exc.status_code
     else:
-        # Use error_info for standard exceptions
-        content = {"msg": error_info.msg}
+        message = error_info.msg
         status_code = error_info.status_code
 
-        # Add detailed error information in non-production environments
         if do_error_log_detail:
             if isinstance(exc, RequestValidationError):
-                # Format Pydantic validation errors
                 error_json = json.dumps(exc.errors(), default=error_to_json)
-                error_dict = json.loads(error_json)
-                content["detail"] = error_dict
-                logger.error(error_dict)
+                details = json.loads(error_json)
+                logger.error(details)
             else:
-                # Include exception message and traceback
-                content["detail"] = exception_message(exc)
+                details = exception_message(exc)
                 logger.error(traceback.format_exc())
 
-    # Return JSON response with trace ID for request correlation
+    content = ResponseFormatter.error(message=message, details=details)
+    content["msg"] = message
+    if details is not None:
+        content["detail"] = details
+
     return JSONResponse(
         headers={"x-trace-id": get_trace_id()}, status_code=status_code, content=content
     )

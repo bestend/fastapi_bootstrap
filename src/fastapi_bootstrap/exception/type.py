@@ -5,7 +5,6 @@ handled by the exception handler and converted to appropriate HTTP responses.
 """
 
 
-
 class BadRequestHeaderError(Exception):
     """Exception raised when request headers are invalid or malformed.
 

@@ -10,14 +10,6 @@ python examples/simple/app.py
 
 Logging, standardized responses, pagination
 
-### [Builder](./builder/) - Builder Pattern (NEW!)
-
-```bash
-python examples/builder/app.py
-```
-
-Fluent builder API, metrics, security headers, request ID/timing
-
 ### [Auth](./auth/) - OIDC Authentication
 
 ```bash
@@ -54,24 +46,6 @@ API Gateway/Ingress authentication, Swagger UI Bearer token support
 from fastapi_bootstrap import create_app
 
 app = create_app([router], title="My API", prefix_url="/v1")
-```
-
-### Basic App (Builder Pattern) ✨
-
-```python
-from fastapi_bootstrap import bootstrap
-
-app = (
-    bootstrap()
-    .title("My API")
-    .version("1.0.0")
-    .stage("prod")
-    .with_cors(origins=["https://myapp.com"])
-    .with_security_headers()
-    .with_metrics()
-    .add_router(router)
-    .build()
-)
 ```
 
 ### Auto Logging

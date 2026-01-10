@@ -23,6 +23,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, RedirectResponse, Response
 
+from fastapi_bootstrap.config import BootstrapSettings
 from fastapi_bootstrap.exception.handler import add_exception_handler
 from fastapi_bootstrap.log import get_logger, setup_logging
 
@@ -116,6 +117,8 @@ def create_app(
     version: str = "",
     prefix_url: str = "",
     graceful_timeout: int = 10,
+    *,
+    settings: BootstrapSettings | None = None,
     dependencies: list[Any] | None = None,
     middlewares: list | None = None,
     startup_coroutines: list[Callable] | None = None,
@@ -148,6 +151,8 @@ def create_app(
         version: API version string
         prefix_url: URL prefix for all API routes (e.g., "/api/v1")
         graceful_timeout: Seconds to wait during graceful shutdown (default: 10)
+        settings: Optional BootstrapSettings. If provided, its values are used as defaults
+            and override per-argument values when explicitly set.
         dependencies: List of FastAPI dependencies to apply globally
         middlewares: List of Starlette middleware classes to add
         startup_coroutines: List of async functions to run on app startup
@@ -197,6 +202,19 @@ def create_app(
         )
         ```
     """
+    if settings is not None:
+        title = settings.title
+        version = settings.version
+        stage = settings.stage
+        health_check_api = settings.health_check.endpoint
+        graceful_timeout = settings.graceful_shutdown.timeout
+
+        cors_config = settings.get_cors_config_for_stage()
+        cors_origins = cors_config.origins
+        cors_allow_credentials = cors_config.allow_credentials
+        cors_allow_methods = cors_config.allow_methods
+        cors_allow_headers = cors_config.allow_headers
+
     # Initialize default values for mutable arguments
     if dependencies is None:
         dependencies = []

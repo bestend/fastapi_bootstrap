@@ -5,7 +5,6 @@ Auth0, Google, etc. It handles token validation, user info extraction, and
 dependency injection for protected routes.
 """
 
-
 import time
 from collections.abc import Callable
 from typing import Any

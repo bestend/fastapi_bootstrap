@@ -254,7 +254,6 @@ class TestMaxRequestSizeMiddleware:
             return {"size": len(body)}
 
         client = TestClient(app)
-        # Create a request larger than 100 bytes
         large_content = "x" * 200
         response = client.post(
             "/test",
@@ -262,5 +261,23 @@ class TestMaxRequestSizeMiddleware:
             headers={"Content-Length": str(len(large_content))},
         )
 
+        assert response.status_code == 413
+        assert "too large" in response.text.lower()
+
+    def test_rejects_large_requests_without_content_length(self):
+        app = FastAPI()
+        app.add_middleware(MaxRequestSizeMiddleware, max_size=100)
+
+        @app.post("/test")
+        async def test_endpoint(request: Request):
+            body = await request.body()
+            return {"size": len(body)}
+
+        client = TestClient(app)
+
+        request = client.build_request("POST", "/test", content=("x" * 200))
+        request.headers.pop("Content-Length", None)
+
+        response = client.send(request)
         assert response.status_code == 413
         assert "too large" in response.text.lower()

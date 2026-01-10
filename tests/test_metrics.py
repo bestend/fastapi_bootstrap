@@ -184,10 +184,24 @@ class TestMetricsMiddleware:
         client.get("/health")
         client.get("/api/data")
 
-        # Health endpoint should be excluded, api/data should be included
         registry = get_metrics_registry()
         output = registry.export()
         assert "/health" not in output and "/api/data" in output
+
+    def test_middleware_does_not_use_raw_paths_for_unmatched_routes(self):
+        app = FastAPI()
+        app.add_middleware(MetricsMiddleware)
+        client = TestClient(app)
+
+        client.get("/does-not-exist-1")
+        client.get("/does-not-exist-2")
+
+        registry = get_metrics_registry()
+        output = registry.export()
+
+        assert "/does-not-exist-1" not in output
+        assert "/does-not-exist-2" not in output
+        assert 'path="/__unmatched__"' in output
 
 
 class TestMetricsRouter:

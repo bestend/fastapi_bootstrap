@@ -430,7 +430,7 @@ class BootstrapSettings(BaseModel):
             )
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> BootstrapSettings:
     """Get cached settings instance.
 

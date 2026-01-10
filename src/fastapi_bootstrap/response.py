@@ -5,7 +5,6 @@ across all endpoints. It ensures that all responses follow a standard structure,
 making it easier for clients to parse and handle responses.
 """
 
-
 from datetime import UTC, datetime
 from typing import Any, TypeVar
 

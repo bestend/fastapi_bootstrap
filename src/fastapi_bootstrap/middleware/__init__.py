@@ -9,7 +9,6 @@ This module provides security-related middleware including:
 import time
 import uuid
 from collections.abc import Callable
-from typing import Any
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -268,7 +267,6 @@ class MaxRequestSizeMiddleware:
             await self.app(scope, receive, send)
             return
 
-        # Check Content-Length header
         headers = dict(scope.get("headers", []))
         content_length = headers.get(b"content-length")
 
@@ -283,9 +281,33 @@ class MaxRequestSizeMiddleware:
                     await response(scope, receive, send)
                     return
             except ValueError:
-                pass  # Invalid Content-Length, let the request proceed
+                pass
 
-        await self.app(scope, receive, send)
+        received = 0
+
+        async def limited_receive():
+            nonlocal received
+            message = await receive()
+            if message.get("type") == "http.request":
+                body = message.get("body", b"")
+                received += len(body)
+                if received > self.max_size:
+                    raise ValueError("request body too large")
+            return message
+
+        async def limited_send(message):
+            await send(message)
+
+        try:
+            await self.app(scope, limited_receive, limited_send)
+        except ValueError as e:
+            if str(e) != "request body too large":
+                raise
+            response = Response(
+                content=f"Request body too large. Max size: {self.max_size} bytes",
+                status_code=413,
+            )
+            await response(scope, receive, send)
 
 
 # Export all middleware classes

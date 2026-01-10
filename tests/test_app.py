@@ -5,6 +5,13 @@ from fastapi import APIRouter
 from fastapi.testclient import TestClient
 
 from fastapi_bootstrap import LoggingAPIRoute, create_app
+from fastapi_bootstrap.config import (
+    BootstrapSettings,
+    CORSSettings,
+    GracefulShutdownSettings,
+    HealthCheckSettings,
+    Stage,
+)
 
 
 @pytest.fixture
@@ -84,3 +91,84 @@ def test_trace_id_in_response(simple_router):
 
     response = client.get("/test")
     assert "x-trace-id" in response.headers
+
+
+class TestCreateAppWithSettings:
+    """Tests for create_app with BootstrapSettings."""
+
+    def test_create_app_with_settings_basic(self, simple_router):
+        """Test app creation with BootstrapSettings."""
+        settings = BootstrapSettings(
+            title="Settings API",
+            version="2.0.0",
+        )
+        app = create_app([simple_router], settings=settings)
+
+        assert app.title == "Settings API"
+        assert app.version == "2.0.0"
+
+    def test_create_app_with_settings_overrides_params(self, simple_router):
+        """Settings should override individual parameters."""
+        settings = BootstrapSettings(
+            title="From Settings",
+            version="3.0.0",
+        )
+        app = create_app(
+            [simple_router],
+            title="From Param",
+            version="1.0.0",
+            settings=settings,
+        )
+
+        assert app.title == "From Settings"
+        assert app.version == "3.0.0"
+
+    def test_create_app_with_settings_stage(self, simple_router):
+        """Test app creation with different stages via settings."""
+        settings = BootstrapSettings(
+            title="Prod API",
+            stage=Stage.PROD,
+            cors=CORSSettings(origins=["https://example.com"]),
+        )
+        app = create_app([simple_router], settings=settings)
+        client = TestClient(app)
+
+        response = client.get("/test")
+        assert response.status_code == 200
+
+    def test_create_app_with_settings_health_check(self, simple_router):
+        """Test custom health check endpoint via settings."""
+        settings = BootstrapSettings(
+            health_check=HealthCheckSettings(endpoint="/health"),
+        )
+        app = create_app([simple_router], settings=settings)
+        client = TestClient(app)
+
+        response = client.get("/health")
+        assert response.status_code == 200
+        assert response.text == "OK"
+
+    def test_create_app_with_settings_graceful_shutdown(self, simple_router):
+        """Test graceful shutdown configuration via settings."""
+        settings = BootstrapSettings(
+            graceful_shutdown=GracefulShutdownSettings(timeout=5),
+        )
+        app = create_app([simple_router], settings=settings)
+
+        assert app is not None
+
+    def test_create_app_legacy_params_still_work(self, simple_router):
+        """Test that legacy parameter-based configuration still works."""
+        app = create_app(
+            [simple_router],
+            title="Legacy API",
+            version="1.0.0",
+            stage="dev",
+            health_check_api="/healthz",
+            cors_origins=["*"],
+        )
+        client = TestClient(app)
+
+        assert app.title == "Legacy API"
+        response = client.get("/healthz")
+        assert response.status_code == 200

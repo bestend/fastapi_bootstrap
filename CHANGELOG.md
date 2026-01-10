@@ -9,10 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-#### Builder Pattern API
-- `FastAPIBootstrap` - Fluent builder pattern for intuitive app configuration
-- `bootstrap()` - Convenience function to create builder instance
-- Chainable methods: `.title()`, `.version()`, `.stage()`, `.prefix()`, `.with_*()`, `.add_router()`, `.build()`
 
 #### Configuration Management
 - `BootstrapSettings` - Centralized Pydantic-based configuration class
@@ -32,8 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `MetricsRegistry` - Counter, Gauge, Histogram implementations
 - Request count, latency histogram, in-progress requests, error tracking
 
-#### New Examples
-- `examples/builder/` - Builder pattern usage example
 
 ### Changed
 - Updated minimum dependency versions for better compatibility

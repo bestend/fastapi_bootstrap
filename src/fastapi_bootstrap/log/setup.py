@@ -15,6 +15,7 @@ import os
 import sys
 import traceback
 from functools import lru_cache, partial
+from typing import Any
 
 from loguru import logger
 from loguru._handler import Handler
@@ -28,8 +29,17 @@ try:
     )
 
     OTEL_AVAILABLE = True
-except ImportError:
+except ImportError:  # pragma: no cover
     OTEL_AVAILABLE = False
+    INVALID_SPAN = None  # type: ignore[assignment]
+    INVALID_SPAN_CONTEXT = None  # type: ignore[assignment]
+
+    def get_current_span(context: Any | None = None) -> Any:  # type: ignore[misc]
+        raise RuntimeError("OpenTelemetry is not available")
+
+    def get_tracer_provider() -> Any:  # type: ignore[misc]
+        raise RuntimeError("OpenTelemetry is not available")
+
 
 from fastapi_bootstrap.util.etc import str2bool
 
@@ -40,25 +50,25 @@ LOG_JSON = str2bool(os.environ.get("LOG_JSON", "false"))
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
 
 
-def truncate_strings_in_structure(struct):
+def truncate_strings_in_structure(struct: Any) -> Any:
     """Recursively truncate long strings in nested data structures.
+
+    This function is **pure** (does not mutate the input).
 
     Args:
         struct: Any data structure (dict, list, str, etc.)
 
     Returns:
-        The structure with long strings replaced with "[[truncated]]"
+        A new structure with long strings replaced with "[[truncated]]".
     """
-    if isinstance(struct, str) and len(struct) > 2000:
-        return "[[truncated]]"
+    if isinstance(struct, str):
+        return "[[truncated]]" if len(struct) > 2000 else struct
 
-    elif isinstance(struct, dict):
-        for k, v in struct.items():
-            struct[k] = truncate_strings_in_structure(v)
+    if isinstance(struct, dict):
+        return {k: truncate_strings_in_structure(v) for k, v in struct.items()}
 
-    elif isinstance(struct, list):
-        for idx, item in enumerate(struct):
-            struct[idx] = truncate_strings_in_structure(item)
+    if isinstance(struct, list):
+        return [truncate_strings_in_structure(item) for item in struct]
 
     return struct
 
@@ -121,6 +131,8 @@ class InterceptHandler(logging.Handler):
             import sentry_sdk
 
             sentry_file = sentry_sdk.integrations.logging.__file__
+        except ImportError:
+            sentry_file = None
         except Exception:
             sentry_file = None
 
@@ -359,4 +371,3 @@ def get_logger():
     """
     setup_logging(use_fastapi_format=False)
     return logger
-
