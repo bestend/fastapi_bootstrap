@@ -288,6 +288,9 @@ class BootstrapSettings(BaseModel):
         Returns:
             BootstrapSettings instance configured from environment
 
+        Raises:
+            ValueError: If environment variable cannot be parsed to expected type
+
         Example:
             ```python
             # Set environment variables
@@ -298,6 +301,17 @@ class BootstrapSettings(BaseModel):
             settings = BootstrapSettings.from_env()
             ```
         """
+
+        def parse_int_env(name: str, default: str) -> int:
+            """Parse integer from environment variable with error handling."""
+            value = os.getenv(name, default)
+            try:
+                return int(value)
+            except ValueError as e:
+                raise ValueError(
+                    f"Environment variable {name} must be an integer, got: '{value}'"
+                ) from e
+
         # Parse stage
         stage_str = os.getenv("STAGE", "dev").lower()
         stage = Stage(stage_str) if stage_str in [s.value for s in Stage] else Stage.DEV
@@ -308,24 +322,40 @@ class BootstrapSettings(BaseModel):
             level=os.getenv("LOG_LEVEL", "INFO"),
             format=LogFormat.JSON if log_json else LogFormat.TEXT,
             json_output=log_json,
-            string_max_length=int(os.getenv("LOG_STRING_LENGTH", "5000")),
-            truncation_threshold=int(os.getenv("LOG_TRUNCATION_THRESHOLD", "2000")),
-            traceback_limit=int(os.getenv("TRACEBACKLIMIT", "10")),
+            string_max_length=parse_int_env("LOG_STRING_LENGTH", "5000"),
+            truncation_threshold=parse_int_env("LOG_TRUNCATION_THRESHOLD", "2000"),
+            traceback_limit=parse_int_env("TRACEBACKLIMIT", "10"),
         )
 
         # Parse CORS settings
         cors_origins_str = os.getenv("CORS_ORIGINS", "")
         cors_origins = [o.strip() for o in cors_origins_str.split(",") if o.strip()]
+        allow_credentials = os.getenv("CORS_ALLOW_CREDENTIALS", "true").lower() in (
+            "true",
+            "1",
+            "yes",
+        )
+
+        # Validate CORS configuration
+        if allow_credentials and "*" in cors_origins:
+            import warnings
+
+            warnings.warn(
+                "CORS allow_credentials=True with origins=['*'] is insecure. "
+                "In production, specify explicit origins instead.",
+                UserWarning,
+                stacklevel=2,
+            )
+
         cors_settings = CORSSettings(
             origins=cors_origins,
-            allow_credentials=os.getenv("CORS_ALLOW_CREDENTIALS", "true").lower()
-            in ("true", "1", "yes"),
+            allow_credentials=allow_credentials,
         )
 
         # Parse rate limit settings
         rate_limit_settings = RateLimitSettings(
             enabled=os.getenv("RATE_LIMIT_ENABLED", "false").lower() in ("true", "1", "yes"),
-            requests_per_minute=int(os.getenv("RATE_LIMIT_RPM", "60")),
+            requests_per_minute=parse_int_env("RATE_LIMIT_RPM", "60"),
         )
 
         # Parse metrics settings
@@ -336,7 +366,7 @@ class BootstrapSettings(BaseModel):
 
         # Parse graceful shutdown
         graceful_settings = GracefulShutdownSettings(
-            timeout=int(os.getenv("GRACEFUL_SHUTDOWN_TIMEOUT", "10")),
+            timeout=parse_int_env("GRACEFUL_SHUTDOWN_TIMEOUT", "10"),
         )
 
         return cls(

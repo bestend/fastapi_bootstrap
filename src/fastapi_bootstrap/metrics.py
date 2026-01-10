@@ -38,13 +38,19 @@ class Histogram:
     _lock: Lock = field(default_factory=Lock)
 
     def observe(self, value: float) -> None:
-        """Record an observation."""
+        """Record an observation.
+
+        Increments only the smallest bucket that can contain the value.
+        Cumulative counts are computed in get_bucket_counts().
+        """
         with self._lock:
             self._sum += value
             self._count += 1
-            for bucket in self.buckets:
+            # Find the smallest bucket that can contain this value
+            for bucket in sorted(self.buckets):
                 if value <= bucket:
                     self._counts[bucket] += 1
+                    break  # Only increment one bucket, not all matching buckets
 
     @property
     def sum(self) -> float:
@@ -57,7 +63,10 @@ class Histogram:
         return self._count
 
     def get_bucket_counts(self) -> dict[float, int]:
-        """Get cumulative bucket counts."""
+        """Get cumulative bucket counts (Prometheus histogram format).
+
+        Returns counts where each bucket includes all observations <= bucket boundary.
+        """
         cumulative = {}
         total = 0
         for bucket in sorted(self.buckets):

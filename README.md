@@ -45,13 +45,13 @@ Stop writing the same boilerplate code for every FastAPI project. Start building
 ## 📦 Installation
 
 ```bash
-pip install fastapi_bootstrap
+pip install fastapi-bootstrap
 
 # With authentication support
-pip install fastapi_bootstrap[auth]
+pip install fastapi-bootstrap[auth]
 
 # With all optional dependencies
-pip install fastapi_bootstrap[all]
+pip install fastapi-bootstrap[all]
 ```
 
 ---
