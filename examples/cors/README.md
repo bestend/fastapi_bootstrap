@@ -27,51 +27,48 @@ app = create_app([router], stage="prod")
 
 ## Code
 
-### Production (explicit origins)
-
-```python
-app = create_app(
-    [router],
-    stage="prod",
-    cors_origins=[
-        "https://myapp.com",
-        "https://www.myapp.com",
-    ],
-    cors_allow_credentials=True,
-)
-```
-
-### Custom Config
-
-```python
-app = create_app(
-    [router],
-    stage="prod",
-    cors_origins=["https://partner.com"],
-    cors_allow_credentials=False,
-    cors_allow_methods=["GET", "POST"],
-    cors_allow_headers=["Content-Type", "Authorization"],
-)
-```
-
-### Environment Variable Based
-
 ```python
 import os
 
-origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
+import uvicorn
+from fastapi import APIRouter
+
+from fastapi_bootstrap import LoggingAPIRoute, create_app
+
+router = APIRouter(route_class=LoggingAPIRoute)
+
+
+@router.get("/data")
+async def get_data():
+    return {"message": "CORS-enabled endpoint"}
+
+
 app = create_app(
-    [router],
+    api_list=[router],
+    title="CORS Example",
     stage=os.getenv("STAGE", "dev"),
-    cors_origins=origins or None,
+    cors_origins=os.getenv("ALLOWED_ORIGINS", "").split(",") or None,
 )
+
+if __name__ == "__main__":
+    print(f"Stage: {os.getenv('STAGE', 'dev')}")
+    print(f"Allowed origins: {os.getenv('ALLOWED_ORIGINS', '*')}")
+    print("Docs: http://localhost:8000/docs")
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
 
 ## Testing
 
+```bash
+# Test endpoint
+curl "http://localhost:8000/data"
+```
+
+Or test CORS from browser console:
+
 ```javascript
 // Browser console (from http://example.com)
-fetch('http://localhost:8000/v1/api/public')
+fetch('http://localhost:8000/data')
   .then(r => r.json())
   .then(console.log)
   .catch(err => console.error('CORS Error:', err));

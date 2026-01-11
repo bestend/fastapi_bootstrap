@@ -10,7 +10,7 @@ export OIDC_CLIENT_ID="my-api"
 export OIDC_CLIENT_SECRET="your-secret"
 
 python examples/auth/app.py
-# http://localhost:8000/v1/docs
+# http://localhost:8000/docs
 ```
 
 ## Authentication Methods (2 options)
@@ -74,65 +74,78 @@ curl -X POST https://keycloak.../token \
 ## Code
 
 ```python
-from fastapi_bootstrap import OIDCAuth, OIDCConfig, TokenPayload
+import os
 
-# OIDC config
-config = OIDCConfig(
-    issuer="https://keycloak.../realms/myrealm",
-    client_id="my-api",
-    audience=None  # Keycloak doesn't require audience validation
+import uvicorn
+from fastapi import APIRouter, Depends
+
+from fastapi_bootstrap import (
+    LoggingAPIRoute,
+    OIDCAuth,
+    OIDCConfig,
+    TokenPayload,
+    create_app,
 )
-auth = OIDCAuth(config, enable_swagger_ui=True)
 
-# Protected endpoint
+config = OIDCConfig(
+    issuer=os.getenv("OIDC_ISSUER", "https://keycloak.example.com/realms/myrealm"),
+    client_id=os.getenv("OIDC_CLIENT_ID", "my-client"),
+    client_secret=os.getenv("OIDC_CLIENT_SECRET", ""),
+    audience=None,
+)
+
+auth = OIDCAuth(config, enable_swagger_ui=True)
+router = APIRouter(route_class=LoggingAPIRoute)
+
+
+@router.get("/public")
+async def public():
+    return {"message": "Public endpoint"}
+
+
 @router.get("/me")
 async def get_me(user: TokenPayload = Depends(auth.get_current_user)):
-    return {"email": user.email, "roles": user.roles}
+    return {
+        "sub": user.sub,
+        "email": user.email,
+        "username": user.preferred_username,
+        "roles": user.roles,
+    }
 
-# Role check
+
 @router.get("/admin")
-async def admin_only(user = Depends(auth.require_roles(["admin"]))):
-    return {"message": "Admin access"}
+async def admin_only(user: TokenPayload = Depends(auth.require_roles(["admin"]))):
+    return {"message": "Admin access", "user": user.email}
 
-# Optional auth
-@router.get("/posts")
-async def posts(user: TokenPayload | None = Depends(auth.optional_auth())):
-    return get_personalized_posts(user.sub) if user else get_public_posts()
 
-# Swagger OAuth2 config
 app = create_app(
-    [router],
+    api_list=[router],
+    title="Auth Example",
     swagger_ui_init_oauth={
         "clientId": config.client_id,
         "clientSecret": config.client_secret,
         "usePkceWithAuthorizationCodeGrant": True,
-    }
+    },
 )
+
+if __name__ == "__main__":
+    print(f"OIDC Issuer: {config.issuer}")
+    print(f"Client ID: {config.client_id}")
+    print("Docs: http://localhost:8000/docs")
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
 
 ## Endpoints
 
 ```bash
 # Public
-GET /v1/api/public
+GET /public
 
 # Authenticated
-GET /v1/api/me
+GET /me
 
 # Admin role required
-GET /v1/api/admin
-
-# Admin OR moderator
-GET /v1/api/moderator
-
-# Admin AND superuser (both required)
-DELETE /v1/api/system/purge
-
-# Group check
-GET /v1/api/engineering  # /engineering or /developers group
-
-# Optional auth
-GET /v1/api/posts
+GET /admin
 ```
 
 ## Role/Group Checks
