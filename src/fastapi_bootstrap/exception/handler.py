@@ -7,6 +7,7 @@ into properly formatted JSON error responses with consistent structure.
 import functools
 import json
 import traceback
+from collections.abc import Callable
 
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException, RequestValidationError
@@ -114,23 +115,38 @@ def get_responses_for_exception():
     return responses
 
 
-def add_exception_handler(app: FastAPI, stage: str):
+def add_exception_handler(
+    app: FastAPI,
+    stage: str,
+    custom_handlers: dict[type[Exception] | int, Callable] | None = None,
+):
     """Add exception handlers to FastAPI application.
 
     Registers handlers for all exceptions defined in exception_definitions.
     In production (stage="prod"), detailed error information is suppressed.
 
+    Custom handlers take precedence over default handlers. If a custom handler
+    is provided for an exception type, the default handler is skipped.
+
     Args:
         app: The FastAPI application instance
         stage: Environment stage ("dev", "staging", or "prod")
+        custom_handlers: Optional dictionary of custom exception handlers that
+            take precedence over default handlers
     """
     # Suppress detailed errors in production
     do_error_log_detail = stage != "prod"
 
     exception_definitions = get_exception_definitions()
 
-    # Register handler for each exception type
+    # Get the set of exception types that have custom handlers
+    custom_handler_types = set(custom_handlers.keys()) if custom_handlers else set()
+
+    # Register handler for each exception type (skip if custom handler exists)
     for exception, error_info in exception_definitions.items():
+        # Skip if user provided a custom handler for this exception type
+        if exception in custom_handler_types:
+            continue
 
         @app.exception_handler(exception)
         async def exception_handler_func(request: Request, exc: Exception, error_info=error_info):
@@ -145,6 +161,11 @@ def add_exception_handler(app: FastAPI, stage: str):
                 JSON error response
             """
             return await _generate_error_response_core(error_info, exc, do_error_log_detail)
+
+    # Register custom handlers after default handlers (they take precedence in FastAPI)
+    if custom_handlers:
+        for exc_type, handler in custom_handlers.items():
+            app.exception_handler(exc_type)(handler)
 
 
 async def generate_error_response(exc: Exception, stage: str = "dev"):

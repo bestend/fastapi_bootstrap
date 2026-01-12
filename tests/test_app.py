@@ -210,3 +210,50 @@ class TestLoggingAPIRouteHTTPException:
         response = client.get("/error")
         assert response.status_code == 500
         assert response.json()["success"] is False
+
+
+class TestCustomExceptionHandlers:
+    def test_custom_handler_via_parameter(self):
+        router = APIRouter(route_class=LoggingAPIRoute)
+
+        @router.get("/protected")
+        async def protected():
+            raise HTTPException(status_code=401, detail="Not authenticated")
+
+        async def custom_401_handler(request: Request, exc: HTTPException):
+            if exc.status_code == 401:
+                return RedirectResponse(url="/login", status_code=302)
+            from fastapi.responses import JSONResponse
+
+            return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
+        app = create_app(
+            [router],
+            exception_handlers={HTTPException: custom_401_handler},
+        )
+
+        client = TestClient(app, follow_redirects=False)
+
+        response = client.get("/protected")
+        assert response.status_code == 302
+        assert response.headers["location"] == "/login"
+
+    def test_custom_handler_does_not_affect_other_exceptions(self):
+        router = APIRouter(route_class=LoggingAPIRoute)
+
+        @router.get("/error")
+        async def error_endpoint():
+            raise ValueError("Something went wrong")
+
+        async def custom_401_handler(request: Request, exc: HTTPException):
+            return RedirectResponse(url="/login", status_code=302)
+
+        app = create_app(
+            [router],
+            exception_handlers={HTTPException: custom_401_handler},
+        )
+        client = TestClient(app)
+
+        response = client.get("/error")
+        assert response.status_code == 500
+        assert response.json()["success"] is False

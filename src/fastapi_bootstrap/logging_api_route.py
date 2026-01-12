@@ -2,10 +2,10 @@ import contextlib
 import time
 from collections.abc import Callable
 
+from fastapi.exceptions import HTTPException
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse, Response
 from fastapi.routing import APIRoute
-from starlette.exceptions import HTTPException
 from uvicorn.protocols.utils import get_path_with_query_string
 
 from fastapi_bootstrap.exception import generate_error_response

@@ -6,8 +6,8 @@ corresponding error information (status code, message, log level).
 
 import functools
 
+from fastapi import status
 from fastapi.exceptions import HTTPException, RequestValidationError
-from starlette import status
 
 from fastapi_bootstrap.exception.error_info import ErrorInfo
 from fastapi_bootstrap.exception.type import BadRequestHeaderError, InvalidAccessTokenError

@@ -13,15 +13,15 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import APIRouter, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import (
     get_redoc_html,
     get_swagger_ui_html,
     get_swagger_ui_oauth2_redirect_html,
 )
 from fastapi.openapi.utils import get_openapi
-from starlette.middleware.cors import CORSMiddleware
-from starlette.requests import Request
-from starlette.responses import JSONResponse, RedirectResponse, Response
+from fastapi.requests import Request
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 
 from fastapi_bootstrap.config import BootstrapSettings
 from fastapi_bootstrap.exception.handler import add_exception_handler
@@ -134,6 +134,7 @@ def create_app(
     cors_allow_methods: list[str] | None = None,
     cors_allow_headers: list[str] | None = None,
     swagger_ui_init_oauth: dict[str, Any] | None = None,
+    exception_handlers: dict[type[Exception] | int, Callable] | None = None,
 ) -> FastAPI:
     """Create a FastAPI application with pre-configured features.
 
@@ -169,6 +170,9 @@ def create_app(
         cors_allow_headers: Allowed headers. None = auto-configure by stage
         swagger_ui_init_oauth: OAuth2 configuration for Swagger UI (default: None)
             Example: {"clientId": "my-client", "usePkceWithAuthorizationCodeGrant": True}
+        exception_handlers: Dictionary mapping exception types or HTTP status codes
+            to handler functions. These handlers take precedence over default handlers.
+            Example: {HTTPException: my_http_exception_handler, 404: my_404_handler}
 
     Returns:
         Configured FastAPI application instance
@@ -335,7 +339,7 @@ def create_app(
     )
 
     # Add centralized exception handler
-    add_exception_handler(app, stage)
+    add_exception_handler(app, stage, exception_handlers)
 
     # Add custom middlewares (processed in reverse order)
     for middleware in middlewares:

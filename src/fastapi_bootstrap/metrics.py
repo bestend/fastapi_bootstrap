@@ -19,8 +19,8 @@ from enum import Enum
 from threading import Lock
 
 from fastapi import APIRouter, Request, Response
+from fastapi.routing import Match
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.routing import Match
 from starlette.types import ASGIApp
 
 
