@@ -5,6 +5,7 @@ from collections.abc import Callable
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse, Response
 from fastapi.routing import APIRoute
+from starlette.exceptions import HTTPException
 from uvicorn.protocols.utils import get_path_with_query_string
 
 from fastapi_bootstrap.exception import generate_error_response
@@ -66,6 +67,8 @@ class LoggingAPIRoute(APIRoute):
                 await self._request_logging(request)
                 try:
                     response = await original_route_handler(request)
+                except HTTPException:
+                    raise  # Allow app-level exception handlers to process
                 except Exception as exc:
                     response = await generate_error_response(exc)
 

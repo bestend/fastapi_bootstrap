@@ -1,7 +1,8 @@
 """Test basic app creation."""
 
 import pytest
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import RedirectResponse
 from fastapi.testclient import TestClient
 
 from fastapi_bootstrap import LoggingAPIRoute, create_app
@@ -172,3 +173,40 @@ class TestCreateAppWithSettings:
         assert app.title == "Legacy API"
         response = client.get("/healthz")
         assert response.status_code == 200
+
+
+class TestLoggingAPIRouteHTTPException:
+    def test_http_exception_propagates_to_app_handler(self):
+        router = APIRouter(route_class=LoggingAPIRoute)
+
+        @router.get("/protected")
+        async def protected():
+            raise HTTPException(status_code=401, detail="Not authenticated")
+
+        app = create_app([router])
+
+        @app.exception_handler(HTTPException)
+        async def custom_handler(request: Request, exc: HTTPException):
+            if exc.status_code == 401:
+                return RedirectResponse(url="/login", status_code=302)
+            raise exc
+
+        client = TestClient(app, follow_redirects=False)
+
+        response = client.get("/protected")
+        assert response.status_code == 302
+        assert response.headers["location"] == "/login"
+
+    def test_regular_exception_still_handled_by_route(self):
+        router = APIRouter(route_class=LoggingAPIRoute)
+
+        @router.get("/error")
+        async def error_endpoint():
+            raise ValueError("Something went wrong")
+
+        app = create_app([router])
+        client = TestClient(app)
+
+        response = client.get("/error")
+        assert response.status_code == 500
+        assert response.json()["success"] is False
