@@ -187,6 +187,12 @@ class SecuritySettings(BaseModel):
         description="Field names to mask in logs",
     )
 
+    # External authentication
+    add_external_basic_auth: bool = Field(
+        default=False,
+        description="Add bearer auth to OpenAPI schema for external auth (e.g., API Gateway)",
+    )
+
 
 class RateLimitSettings(BaseModel):
     """Rate limiting configuration."""
@@ -204,6 +210,23 @@ class RateLimitSettings(BaseModel):
         default=10,
         ge=1,
         description="Allowed burst size above the limit",
+    )
+
+
+class DocsSettings(BaseModel):
+    """API documentation configuration."""
+
+    enabled: bool = Field(
+        default=True,
+        description="Enable API documentation endpoints (/docs, /redoc)",
+    )
+    prefix_url: str = Field(
+        default="",
+        description="URL prefix for documentation endpoints",
+    )
+    swagger_oauth: dict[str, Any] | None = Field(
+        default=None,
+        description="OAuth2 configuration for Swagger UI (e.g., clientId, usePkceWithAuthorizationCodeGrant)",
     )
 
 
@@ -290,11 +313,13 @@ class BootstrapSettings(BaseModel):
     metrics: MetricsSettings = Field(default_factory=MetricsSettings)
     health_check: HealthCheckSettings = Field(default_factory=HealthCheckSettings)
     graceful_shutdown: GracefulShutdownSettings = Field(default_factory=GracefulShutdownSettings)
+    docs: DocsSettings = Field(default_factory=DocsSettings)
 
     # Application metadata
     title: str = Field(default="FastAPI Application", description="API title")
     version: str = Field(default="0.1.0", description="API version")
     description: str = Field(default="", description="API description")
+    prefix_url: str = Field(default="", description="URL prefix for all API routes")
 
     model_config = {"use_enum_values": True}
 
@@ -384,16 +409,31 @@ class BootstrapSettings(BaseModel):
             timeout=parse_int_env("GRACEFUL_SHUTDOWN_TIMEOUT", "10"),
         )
 
+        # Parse docs settings
+        docs_settings = DocsSettings(
+            enabled=os.getenv("DOCS_ENABLED", "true").lower() in ("true", "1", "yes"),
+            prefix_url=os.getenv("DOCS_PREFIX_URL", ""),
+        )
+
+        # Parse security settings
+        security_settings = SecuritySettings(
+            add_external_basic_auth=os.getenv("ADD_EXTERNAL_BASIC_AUTH", "false").lower()
+            in ("true", "1", "yes"),
+        )
+
         return cls(
             stage=stage,
             logging=logging_settings,
             cors=cors_settings,
+            security=security_settings,
             rate_limit=rate_limit_settings,
             metrics=metrics_settings,
             graceful_shutdown=graceful_settings,
+            docs=docs_settings,
             title=os.getenv("APP_TITLE", "FastAPI Application"),
             version=os.getenv("APP_VERSION", "0.1.0"),
             description=os.getenv("APP_DESCRIPTION", ""),
+            prefix_url=os.getenv("API_PREFIX_URL", ""),
         )
 
     def get_cors_config_for_stage(self) -> CORSSettings:

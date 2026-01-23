@@ -100,3 +100,8 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 addopts = "-v --cov=fastapi_bootstrap --cov-report=term-missing"
 asyncio_mode = "auto"
+
+[dependency-groups]
+dev = [
+    "ty>=0.0.11",
+]

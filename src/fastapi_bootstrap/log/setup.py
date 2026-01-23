@@ -31,13 +31,13 @@ try:
     OTEL_AVAILABLE = True
 except ImportError:  # pragma: no cover
     OTEL_AVAILABLE = False
-    INVALID_SPAN = None  # type: ignore[assignment]
-    INVALID_SPAN_CONTEXT = None  # type: ignore[assignment]
+    INVALID_SPAN = None  # type: ignore
+    INVALID_SPAN_CONTEXT = None  # type: ignore
 
-    def get_current_span(context: Any | None = None) -> Any:  # type: ignore[misc]
+    def get_current_span(context: Any | None = None) -> Any:
         raise RuntimeError("OpenTelemetry is not available")
 
-    def get_tracer_provider() -> Any:  # type: ignore[misc]
+    def get_tracer_provider() -> Any:
         raise RuntimeError("OpenTelemetry is not available")
 
 
@@ -128,7 +128,7 @@ class InterceptHandler(logging.Handler):
 
         # Get the calling frame, skipping logging and sentry frames
         try:
-            import sentry_sdk
+            import sentry_sdk  # type: ignore
 
             sentry_file = sentry_sdk.integrations.logging.__file__
         except ImportError:
@@ -264,7 +264,7 @@ def _setup_simple_logging():
         ]
     }
 
-    logger.configure(**config)
+    logger.configure(**config)  # type: ignore
 
 
 def _setup_fastapi_logging():
@@ -320,7 +320,7 @@ def _setup_fastapi_logging():
 
     if OTEL_AVAILABLE:
         patcher = _create_otel_patcher()
-        logger.configure(**config, patcher=patcher)
+        logger.configure(**config, patcher=patcher)  # type: ignore
     else:
         # Add dummy trace context when OpenTelemetry is not available
         def add_dummy_trace_context(record):
@@ -329,7 +329,7 @@ def _setup_fastapi_logging():
             record["trace_sampled"] = False
             record["service_name"] = ""
 
-        logger.configure(**config, patcher=add_dummy_trace_context)
+        logger.configure(**config, patcher=add_dummy_trace_context)  # type: ignore
 
 
 def _create_otel_patcher():

@@ -1,11 +1,12 @@
 """FastAPI Bootstrap
 
-🚀 Production-ready FastAPI boilerplate with batteries included.
+Production-ready FastAPI boilerplate with batteries included.
 
 **Quick Start:**
 ```python
 from fastapi import APIRouter
 from fastapi_bootstrap import create_app, LoggingAPIRoute
+from fastapi_bootstrap.config import BootstrapSettings
 
 router = APIRouter(route_class=LoggingAPIRoute)
 
@@ -13,7 +14,12 @@ router = APIRouter(route_class=LoggingAPIRoute)
 async def hello():
     return {"message": "Hello, World!"}
 
-app = create_app([router], title="My API", version="1.0.0")
+# Minimal
+app = create_app(routers=[router])
+
+# With settings
+settings = BootstrapSettings(title="My API", version="1.0.0")
+app = create_app(routers=[router], settings=settings)
 ```
 """
 

@@ -112,28 +112,13 @@ def _handle_path_rewrite(schema: dict, request: Request) -> dict:
 
 
 def create_app(
-    api_list: list[APIRouter],
-    title: str = "",
-    version: str = "",
-    prefix_url: str = "",
-    graceful_timeout: int = 10,
-    *,
+    routers: list[APIRouter],
     settings: BootstrapSettings | None = None,
+    *,
     dependencies: list[Any] | None = None,
     middlewares: list | None = None,
     startup_coroutines: list[Callable] | None = None,
     shutdown_coroutines: list[Callable] | None = None,
-    health_check_api: str = "/healthz",
-    metrics_api: str = "/metrics",
-    docs_enable: bool = True,
-    docs_prefix_url: str = "",
-    add_external_basic_auth: bool = False,
-    stage: str = "dev",
-    cors_origins: list[str] | None = None,
-    cors_allow_credentials: bool = True,
-    cors_allow_methods: list[str] | None = None,
-    cors_allow_headers: list[str] | None = None,
-    swagger_ui_init_oauth: dict[str, Any] | None = None,
     exception_handlers: dict[type[Exception] | int, Callable] | None = None,
 ) -> FastAPI:
     """Create a FastAPI application with pre-configured features.
@@ -147,29 +132,12 @@ def create_app(
     - Graceful shutdown support
 
     Args:
-        api_list: List of FastAPI APIRouter instances to include
-        title: API title for documentation
-        version: API version string
-        prefix_url: URL prefix for all API routes (e.g., "/api/v1")
-        graceful_timeout: Seconds to wait during graceful shutdown (default: 10)
-        settings: Optional BootstrapSettings. If provided, its values are used as defaults
-            and override per-argument values when explicitly set.
+        routers: List of FastAPI APIRouter instances to include
+        settings: BootstrapSettings for configuration. If None, uses defaults.
         dependencies: List of FastAPI dependencies to apply globally
         middlewares: List of Starlette middleware classes to add
         startup_coroutines: List of async functions to run on app startup
         shutdown_coroutines: List of async functions to run on app shutdown
-        health_check_api: Path for health check endpoint (default: "/healthz")
-        metrics_api: Path for metrics endpoint (default: "/metrics")
-        docs_enable: Enable automatic API documentation (default: True)
-        docs_prefix_url: URL prefix for docs (defaults to prefix_url)
-        add_external_basic_auth: Add bearer auth to OpenAPI schema (default: False)
-        stage: Environment stage - "dev", "staging", or "prod" (default: "dev")
-        cors_origins: List of allowed origins. None = auto-configure by stage
-        cors_allow_credentials: Allow credentials in CORS requests (default: True)
-        cors_allow_methods: Allowed HTTP methods. None = auto-configure by stage
-        cors_allow_headers: Allowed headers. None = auto-configure by stage
-        swagger_ui_init_oauth: OAuth2 configuration for Swagger UI (default: None)
-            Example: {"clientId": "my-client", "usePkceWithAuthorizationCodeGrant": True}
         exception_handlers: Dictionary mapping exception types or HTTP status codes
             to handler functions. These handlers take precedence over default handlers.
             Example: {HTTPException: my_http_exception_handler, 404: my_404_handler}
@@ -181,6 +149,7 @@ def create_app(
         ```python
         from fastapi import APIRouter
         from fastapi_bootstrap import create_app, LoggingAPIRoute
+        from fastapi_bootstrap.config import BootstrapSettings, CORSSettings, Stage
 
         router = APIRouter(route_class=LoggingAPIRoute)
 
@@ -188,38 +157,39 @@ def create_app(
         async def hello():
             return {"message": "Hello, World!"}
 
-        # Development - permissive CORS
-        app = create_app(
-            [router],
-            title="My API",
-            version="1.0.0",
-            stage="dev"
-        )
+        # Development - permissive CORS (default)
+        app = create_app(routers=[router])
 
         # Production - strict CORS
-        app = create_app(
-            [router],
+        settings = BootstrapSettings(
             title="My API",
             version="1.0.0",
-            stage="prod",
-            cors_origins=["https://myapp.com", "https://www.myapp.com"]
+            stage=Stage.PROD,
+            cors=CORSSettings(origins=["https://myapp.com"]),
         )
+        app = create_app(routers=[router], settings=settings)
         ```
     """
-    if settings is not None:
-        title = settings.title
-        version = settings.version
-        stage = settings.stage
-        health_check_api = settings.health_check.endpoint
-        graceful_timeout = settings.graceful_shutdown.timeout
+    if settings is None:
+        settings = BootstrapSettings()
 
-        cors_config = settings.get_cors_config_for_stage()
-        cors_origins = cors_config.origins
-        cors_allow_credentials = cors_config.allow_credentials
-        cors_allow_methods = cors_config.allow_methods
-        cors_allow_headers = cors_config.allow_headers
+    title = settings.title
+    version = settings.version
+    stage = settings.stage
+    prefix_url = settings.prefix_url
+    health_check_api = settings.health_check.endpoint
+    graceful_timeout = settings.graceful_shutdown.timeout
+    docs_enable = settings.docs.enabled
+    docs_prefix_url = settings.docs.prefix_url
+    swagger_ui_init_oauth = settings.docs.swagger_oauth
+    add_external_basic_auth = settings.security.add_external_basic_auth
 
-    # Initialize default values for mutable arguments
+    cors_config = settings.get_cors_config_for_stage()
+    cors_origins = cors_config.origins
+    cors_allow_credentials = cors_config.allow_credentials
+    cors_allow_methods = cors_config.allow_methods
+    cors_allow_headers = cors_config.allow_headers
+
     if dependencies is None:
         dependencies = []
     if middlewares is None:
@@ -229,36 +199,12 @@ def create_app(
     if shutdown_coroutines is None:
         shutdown_coroutines = []
 
-    # Configure CORS settings based on environment stage if not explicitly set
-    if cors_origins is None:
-        if stage == "prod":
-            # Production: Require explicit origin configuration
-            cors_origins = []
-            logger.warning(
-                "CORS origins not specified for production. "
-                "Please set cors_origins explicitly for security. "
-                "No origins will be allowed by default."
-            )
-        elif stage == "staging":
-            # Staging: Allow specific common patterns but warn
-            cors_origins = ["https://*.staging.example.com"]
-            logger.info("CORS origins auto-configured for staging environment")
-        else:  # dev
-            # Development: Allow all origins for convenience
-            cors_origins = ["*"]
-            logger.info("CORS origins set to '*' for development (not for production!)")
-
-    if cors_allow_methods is None:
-        # Production: Only common safe methods; Development/Staging: All methods
-        cors_allow_methods = ["GET", "POST", "PUT", "DELETE", "PATCH"] if stage == "prod" else ["*"]
-
-    if cors_allow_headers is None:
-        # Production: Only common headers; Development/Staging: All headers
-        cors_allow_headers = (
-            ["Content-Type", "Authorization", "X-Request-ID"] if stage == "prod" else ["*"]
+    if not cors_origins and stage == "prod":
+        logger.warning(
+            "CORS origins not specified for production. "
+            "Please set cors.origins explicitly for security."
         )
 
-    # Set docs prefix to match API prefix if not specified
     if docs_prefix_url == "":
         docs_prefix_url = prefix_url
 
@@ -325,13 +271,12 @@ def create_app(
         swagger_ui_oauth2_redirect_url=oauth2_redirect,  # Use calculated redirect URL
     )
 
-    # Include all API routers with optional dependencies and URL prefix
-    for api in api_list:
-        app.include_router(api, dependencies=dependencies, prefix=prefix_url)
+    for router in routers:
+        app.include_router(router, dependencies=dependencies, prefix=prefix_url)
 
     # Add CORS middleware with environment-aware defaults
     app.add_middleware(
-        CORSMiddleware,
+        CORSMiddleware,  # type: ignore[arg-type]
         allow_origins=cors_origins,
         allow_credentials=cors_allow_credentials,
         allow_methods=cors_allow_methods,

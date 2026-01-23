@@ -349,7 +349,7 @@ class OIDCAuth:
         # Use oauth2_scheme if available (for Swagger UI integration)
         if self.oauth2_scheme:
 
-            async def dependency(token: str = Depends(self.oauth2_scheme)) -> TokenPayload:  # type: ignore[misc]
+            async def dependency(token: str = Depends(self.oauth2_scheme)) -> TokenPayload:
                 """Validate token and return user info."""
                 payload = self.verify_token(token)
                 return TokenPayload.from_jwt(payload)
@@ -357,7 +357,7 @@ class OIDCAuth:
             return dependency
         else:
             # Fall back to manual header parsing
-            async def dependency(request: Request) -> TokenPayload:  # type: ignore[misc]
+            async def dependency(request: Request) -> TokenPayload:
                 """Validate token from Authorization header."""
                 auth_header = request.headers.get("Authorization")
                 if not auth_header or not auth_header.startswith("Bearer "):
