@@ -16,13 +16,19 @@ STAGE=prod ALLOWED_ORIGINS="https://myapp.com,https://www.myapp.com" \
 ## Auto Configuration by Environment
 
 ```python
-# dev
-app = create_app([router], stage="dev")
-# → cors_origins = ["*"]
+from fastapi_bootstrap.config import BootstrapSettings, CORSSettings, Stage
 
-# prod
-app = create_app([router], stage="prod")
-# → cors_origins = []  ⚠️ Must set explicitly!
+# dev (default: all origins allowed)
+settings = BootstrapSettings(stage=Stage.DEV)
+app = create_app(routers=[router], settings=settings)
+# → cors origins = ["*"]
+
+# prod (must set explicitly)
+settings = BootstrapSettings(
+    stage=Stage.PROD,
+    cors=CORSSettings(origins=["https://myapp.com"]),
+)
+app = create_app(routers=[router], settings=settings)
 ```
 
 ## Code
@@ -34,6 +40,7 @@ import uvicorn
 from fastapi import APIRouter
 
 from fastapi_bootstrap import LoggingAPIRoute, create_app
+from fastapi_bootstrap.config import BootstrapSettings, CORSSettings, Stage
 
 router = APIRouter(route_class=LoggingAPIRoute)
 
@@ -43,16 +50,20 @@ async def get_data():
     return {"message": "CORS-enabled endpoint"}
 
 
-app = create_app(
-    api_list=[router],
+# Parse environment
+stage = Stage(os.getenv("STAGE", "dev"))
+origins = os.getenv("ALLOWED_ORIGINS", "").split(",") if os.getenv("ALLOWED_ORIGINS") else None
+
+settings = BootstrapSettings(
     title="CORS Example",
-    stage=os.getenv("STAGE", "dev"),
-    cors_origins=os.getenv("ALLOWED_ORIGINS", "").split(",") or None,
+    stage=stage,
+    cors=CORSSettings(origins=origins) if origins else None,
 )
+app = create_app(routers=[router], settings=settings)
 
 if __name__ == "__main__":
-    print(f"Stage: {os.getenv('STAGE', 'dev')}")
-    print(f"Allowed origins: {os.getenv('ALLOWED_ORIGINS', '*')}")
+    print(f"Stage: {stage}")
+    print(f"Allowed origins: {origins or '*'}")
     print("Docs: http://localhost:8000/docs")
     uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
@@ -88,16 +99,25 @@ fetch('http://localhost:8000/data')
 
 ```python
 # Production
-cors_origins=["https://myapp.com"]  # Explicit
-cors_allow_credentials=True
+from fastapi_bootstrap.config import BootstrapSettings, CORSSettings, Stage
+
+settings = BootstrapSettings(
+    stage=Stage.PROD,
+    cors=CORSSettings(
+        origins=["https://myapp.com"],  # Explicit
+        allow_credentials=True,
+    ),
+)
 ```
 
 ### ❌ Dangerous Config
 
 ```python
 # ❌ Never in production!
-cors_origins=["*"]
-cors_allow_credentials=True  # wildcard + credentials
+cors=CORSSettings(
+    origins=["*"],
+    allow_credentials=True,  # wildcard + credentials
+)
 ```
 
 ## Troubleshooting
@@ -107,17 +127,17 @@ cors_allow_credentials=True  # wildcard + credentials
 **Fix:**
 ```python
 # Add origin
-cors_origins=["https://your-domain.com"]
+cors=CORSSettings(origins=["https://your-domain.com"])
 
 # Or use dev mode
-stage="dev"
+settings = BootstrapSettings(stage=Stage.DEV)
 ```
 
 ### Preflight Failed
 
 ```python
 # Include OPTIONS method
-cors_allow_methods=["GET", "POST", "OPTIONS"]
+cors=CORSSettings(allow_methods=["GET", "POST", "OPTIONS"])
 ```
 
 ## Environment Variables

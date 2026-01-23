@@ -40,12 +40,14 @@ API Gateway/Ingress authentication, Swagger UI Bearer token support
 
 ## Quick Reference
 
-### Basic App (Traditional)
+### Basic App
 
 ```python
 from fastapi_bootstrap import create_app
+from fastapi_bootstrap.config import BootstrapSettings
 
-app = create_app([router], title="My API", prefix_url="/v1")
+settings = BootstrapSettings(title="My API", prefix_url="/v1")
+app = create_app(routers=[router], settings=settings)
 ```
 
 ### Auto Logging
@@ -104,17 +106,17 @@ app.add_middleware(
 ### Configuration
 
 ```python
-from fastapi_bootstrap import BootstrapSettings, get_settings
+from fastapi_bootstrap.config import BootstrapSettings, LoggingSettings, CORSSettings, Stage
 
-# Load from environment variables
-settings = get_settings()
-
-# Or configure programmatically
+# Configure programmatically
 settings = BootstrapSettings(
-    stage="prod",
+    stage=Stage.PROD,
     logging=LoggingSettings(level="WARNING"),
     cors=CORSSettings(origins=["https://myapp.com"]),
 )
+
+# Or load from environment variables
+settings = BootstrapSettings.from_env()
 ```
 
 ### Sensitive Data Masking
@@ -130,19 +132,23 @@ masked = mask_sensitive_data(data)
 ### CORS
 
 ```python
-app = create_app(
-    [router],
-    stage="prod",
-    cors_origins=["https://myapp.com"]
+from fastapi_bootstrap.config import BootstrapSettings, CORSSettings, Stage
+
+settings = BootstrapSettings(
+    stage=Stage.PROD,
+    cors=CORSSettings(origins=["https://myapp.com"]),
 )
+app = create_app(routers=[router], settings=settings)
 ```
 
 ### External Auth (API Gateway)
 
 ```python
-app = create_app(
-    [router],
-    add_external_basic_auth=True,  # Add Bearer auth to Swagger
+from fastapi_bootstrap.config import BootstrapSettings, SecuritySettings
+
+settings = BootstrapSettings(
+    security=SecuritySettings(add_external_basic_auth=True),  # Add Bearer auth to Swagger
 )
+app = create_app(routers=[router], settings=settings)
 ```
 

@@ -16,6 +16,7 @@ import uvicorn
 from fastapi import APIRouter
 
 from fastapi_bootstrap import LoggingAPIRoute, create_app, get_logger
+from fastapi_bootstrap.config import BootstrapSettings
 
 logger = get_logger()
 router = APIRouter(route_class=LoggingAPIRoute)
@@ -27,11 +28,8 @@ async def hello(name: str = "World"):
     return {"message": f"Hello, {name}!"}
 
 
-app = create_app(
-    api_list=[router],
-    title="Simple Example",
-    version="1.0.0",
-)
+settings = BootstrapSettings(title="Simple Example", version="1.0.0")
+app = create_app(routers=[router], settings=settings)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

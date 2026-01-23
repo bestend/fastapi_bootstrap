@@ -2,6 +2,7 @@ import uvicorn
 from fastapi import APIRouter, Header
 
 from fastapi_bootstrap import LoggingAPIRoute, create_app
+from fastapi_bootstrap.config import BootstrapSettings, SecuritySettings
 
 router = APIRouter(route_class=LoggingAPIRoute)
 
@@ -23,11 +24,11 @@ async def protected(
     }
 
 
-app = create_app(
-    api_list=[router],
+settings = BootstrapSettings(
     title="External Auth Example",
-    add_external_basic_auth=True,
+    security=SecuritySettings(add_external_basic_auth=True),
 )
+app = create_app(routers=[router], settings=settings)
 
 if __name__ == "__main__":
     print("External auth example - Gateway/Ingress handles authentication")

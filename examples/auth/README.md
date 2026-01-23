@@ -86,6 +86,7 @@ from fastapi_bootstrap import (
     TokenPayload,
     create_app,
 )
+from fastapi_bootstrap.config import BootstrapSettings, DocsSettings
 
 config = OIDCConfig(
     issuer=os.getenv("OIDC_ISSUER", "https://keycloak.example.com/realms/myrealm"),
@@ -118,15 +119,17 @@ async def admin_only(user: TokenPayload = Depends(auth.require_roles(["admin"]))
     return {"message": "Admin access", "user": user.email}
 
 
-app = create_app(
-    api_list=[router],
+settings = BootstrapSettings(
     title="Auth Example",
-    swagger_ui_init_oauth={
-        "clientId": config.client_id,
-        "clientSecret": config.client_secret,
-        "usePkceWithAuthorizationCodeGrant": True,
-    },
+    docs=DocsSettings(
+        swagger_oauth={
+            "clientId": config.client_id,
+            "clientSecret": config.client_secret,
+            "usePkceWithAuthorizationCodeGrant": True,
+        }
+    ),
 )
+app = create_app(routers=[router], settings=settings)
 
 if __name__ == "__main__":
     print(f"OIDC Issuer: {config.issuer}")
