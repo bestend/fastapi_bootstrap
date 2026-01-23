@@ -110,8 +110,8 @@ def test_verify_token_success(mock_decode, oidc_auth, mock_jwt_payload):
 @patch("fastapi_bootstrap.auth.jwt.decode")
 def test_verify_token_expired(mock_decode, oidc_auth):
     """Test expired token handling."""
-    from jose import jwt as jose_jwt
     from fastapi import HTTPException
+    from jose import jwt as jose_jwt
 
     mock_decode.side_effect = jose_jwt.ExpiredSignatureError()
 

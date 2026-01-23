@@ -117,6 +117,7 @@ class TestDocsSettings:
         }
         settings = DocsSettings(swagger_oauth=oauth_config)
         assert settings.swagger_oauth == oauth_config
+        assert settings.swagger_oauth is not None
         assert settings.swagger_oauth["clientId"] == "my-client"
 
 
