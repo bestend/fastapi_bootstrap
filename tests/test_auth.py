@@ -7,8 +7,8 @@ from fastapi import APIRouter, Depends
 from fastapi.testclient import TestClient
 
 from fastapi_bootstrap import create_app
+from fastapi_bootstrap.config import BootstrapSettings, Stage
 
-# Skip if auth dependencies not installed
 pytest.importorskip("jose")
 
 from fastapi_bootstrap.auth import OIDCAuth, OIDCConfig, TokenPayload
@@ -20,7 +20,7 @@ def oidc_config():
     return OIDCConfig(
         issuer="https://keycloak.example.com/realms/test",
         client_id="test-client",
-        verify_signature=False,  # Skip signature verification in tests
+        verify_signature=False,
     )
 
 
@@ -38,7 +38,7 @@ def mock_jwt_payload():
         "email": "user@example.com",
         "preferred_username": "testuser",
         "name": "Test User",
-        "exp": 9999999999,  # Far future
+        "exp": 9999999999,
         "iat": 1234567890,
         "realm_access": {"roles": ["user", "admin"]},
         "groups": ["/engineering", "/developers"],
@@ -48,7 +48,7 @@ def mock_jwt_payload():
 def test_oidc_config_default_audience():
     """Test that audience defaults to None (no validation)."""
     config = OIDCConfig(issuer="https://example.com", client_id="my-client")
-    assert config.audience is None  # None means no audience validation
+    assert config.audience is None
 
 
 def test_oidc_config_custom_audience():
@@ -76,12 +76,10 @@ def test_token_payload_from_jwt(mock_jwt_payload):
 
 def test_token_payload_roles_extraction():
     """Test role extraction from various locations."""
-    # Realm roles
     payload1 = TokenPayload.from_jwt({"sub": "1", "realm_access": {"roles": ["role1", "role2"]}})
     assert "role1" in payload1.roles
     assert "role2" in payload1.roles
 
-    # Resource roles
     payload2 = TokenPayload.from_jwt(
         {
             "sub": "2",
@@ -94,7 +92,6 @@ def test_token_payload_roles_extraction():
     assert "role3" in payload2.roles
     assert "role4" in payload2.roles
 
-    # Direct roles
     payload3 = TokenPayload.from_jwt({"sub": "3", "roles": ["role5"]})
     assert "role5" in payload3.roles
 
@@ -114,6 +111,7 @@ def test_verify_token_success(mock_decode, oidc_auth, mock_jwt_payload):
 def test_verify_token_expired(mock_decode, oidc_auth):
     """Test expired token handling."""
     from jose import jwt as jose_jwt
+    from fastapi import HTTPException
 
     mock_decode.side_effect = jose_jwt.ExpiredSignatureError()
 
@@ -121,6 +119,7 @@ def test_verify_token_expired(mock_decode, oidc_auth):
         with pytest.raises(Exception) as exc_info:
             oidc_auth.verify_token("expired-token")
 
+    assert isinstance(exc_info.value, HTTPException)
     assert exc_info.value.status_code == 401
     assert "expired" in str(exc_info.value.detail).lower()
 
@@ -133,11 +132,12 @@ def test_protected_route_without_token(oidc_auth):
     async def protected(user: TokenPayload = Depends(oidc_auth.get_current_user)):
         return {"user": user.email}
 
-    app = create_app([router], stage="dev")
+    settings = BootstrapSettings(stage=Stage.DEV)
+    app = create_app(routers=[router], settings=settings)
     client = TestClient(app)
 
     response = client.get("/protected")
-    assert response.status_code == 401  # HTTPBearer returns 401 for missing auth
+    assert response.status_code == 401
 
 
 @patch("fastapi_bootstrap.auth.jwt.decode")
@@ -151,7 +151,8 @@ def test_protected_route_with_valid_token(mock_decode, oidc_auth, mock_jwt_paylo
     async def protected(user: TokenPayload = Depends(oidc_auth.get_current_user)):
         return {"user": user.email, "roles": user.roles}
 
-    app = create_app([router], stage="dev")
+    settings = BootstrapSettings(stage=Stage.DEV)
+    app = create_app(routers=[router], settings=settings)
     client = TestClient(app)
 
     with patch.object(oidc_auth, "_get_signing_key", return_value={}):
@@ -174,7 +175,8 @@ def test_require_roles_success(mock_decode, oidc_auth, mock_jwt_payload):
     async def admin_only(user: TokenPayload = Depends(oidc_auth.require_roles(["admin"]))):
         return {"message": "Admin access granted"}
 
-    app = create_app([router], stage="dev")
+    settings = BootstrapSettings(stage=Stage.DEV)
+    app = create_app(routers=[router], settings=settings)
     client = TestClient(app)
 
     with patch.object(oidc_auth, "_get_signing_key", return_value={}):
@@ -196,14 +198,14 @@ def test_require_roles_forbidden(mock_decode, oidc_auth, mock_jwt_payload):
     ):
         return {"message": "Superadmin access"}
 
-    app = create_app([router], stage="dev")
+    settings = BootstrapSettings(stage=Stage.DEV)
+    app = create_app(routers=[router], settings=settings)
     client = TestClient(app)
 
     with patch.object(oidc_auth, "_get_signing_key", return_value={}):
         response = client.get("/superadmin", headers={"Authorization": "Bearer fake-token"})
 
     assert response.status_code == 403
-    # Exception handler converts HTTPException detail to msg
     response_data = response.json()
     assert "msg" in response_data or "detail" in response_data
 
@@ -226,13 +228,13 @@ def test_require_all_roles(mock_decode, oidc_auth):
     ):
         return {"message": "Access granted"}
 
-    app = create_app([router], stage="dev")
+    settings = BootstrapSettings(stage=Stage.DEV)
+    app = create_app(routers=[router], settings=settings)
     client = TestClient(app)
 
     with patch.object(oidc_auth, "_get_signing_key", return_value={}):
         response = client.get("/restricted", headers={"Authorization": "Bearer fake-token"})
 
-    # User has admin but not superuser
     assert response.status_code == 403
 
 
@@ -249,7 +251,8 @@ def test_require_groups(mock_decode, oidc_auth, mock_jwt_payload):
     ):
         return {"department": "engineering"}
 
-    app = create_app([router], stage="dev")
+    settings = BootstrapSettings(stage=Stage.DEV)
+    app = create_app(routers=[router], settings=settings)
     client = TestClient(app)
 
     with patch.object(oidc_auth, "_get_signing_key", return_value={}):
@@ -271,7 +274,8 @@ def test_optional_auth_with_token(mock_decode, oidc_auth, mock_jwt_payload):
             return {"personalized": True, "user": user.email}
         return {"personalized": False}
 
-    app = create_app([router], stage="dev")
+    settings = BootstrapSettings(stage=Stage.DEV)
+    app = create_app(routers=[router], settings=settings)
     client = TestClient(app)
 
     with patch.object(oidc_auth, "_get_signing_key", return_value={}):
@@ -293,7 +297,8 @@ def test_optional_auth_without_token(oidc_auth):
             return {"personalized": True}
         return {"personalized": False}
 
-    app = create_app([router], stage="dev")
+    settings = BootstrapSettings(stage=Stage.DEV)
+    app = create_app(routers=[router], settings=settings)
     client = TestClient(app)
 
     response = client.get("/posts")

@@ -9,6 +9,7 @@ from fastapi_bootstrap import LoggingAPIRoute, create_app
 from fastapi_bootstrap.config import (
     BootstrapSettings,
     CORSSettings,
+    DocsSettings,
     GracefulShutdownSettings,
     HealthCheckSettings,
     Stage,
@@ -28,20 +29,27 @@ def simple_router():
 
 
 def test_create_app_basic(simple_router):
-    """Test basic app creation."""
-    app = create_app(
-        [simple_router],
-        title="Test API",
-        version="1.0.0",
-    )
+    """Test basic app creation with new signature."""
+    settings = BootstrapSettings(title="Test API", version="1.0.0")
+    app = create_app(routers=[simple_router], settings=settings)
 
     assert app.title == "Test API"
     assert app.version == "1.0.0"
 
 
+def test_create_app_minimal(simple_router):
+    """Test app creation with minimal arguments."""
+    app = create_app(routers=[simple_router])
+    client = TestClient(app)
+
+    response = client.get("/test")
+    assert response.status_code == 200
+
+
 def test_health_check(simple_router):
     """Test health check endpoint."""
-    app = create_app([simple_router], health_check_api="/healthz")
+    settings = BootstrapSettings(health_check=HealthCheckSettings(endpoint="/healthz"))
+    app = create_app(routers=[simple_router], settings=settings)
     client = TestClient(app)
 
     response = client.get("/healthz")
@@ -51,7 +59,7 @@ def test_health_check(simple_router):
 
 def test_api_endpoint(simple_router):
     """Test API endpoint with logging."""
-    app = create_app([simple_router])
+    app = create_app(routers=[simple_router])
     client = TestClient(app)
 
     response = client.get("/test")
@@ -61,7 +69,8 @@ def test_api_endpoint(simple_router):
 
 def test_api_with_prefix(simple_router):
     """Test API with URL prefix."""
-    app = create_app([simple_router], prefix_url="/api/v1")
+    settings = BootstrapSettings(prefix_url="/api/v1")
+    app = create_app(routers=[simple_router], settings=settings)
     client = TestClient(app)
 
     response = client.get("/api/v1/test")
@@ -77,17 +86,17 @@ def test_docs_disabled():
     async def test_endpoint():
         return {"message": "test"}
 
-    app = create_app([router], docs_enable=False)
+    settings = BootstrapSettings(docs=DocsSettings(enabled=False))
+    app = create_app(routers=[router], settings=settings)
     client = TestClient(app)
 
-    # Docs should not be accessible
     response = client.get("/docs")
     assert response.status_code == 404
 
 
 def test_trace_id_in_response(simple_router):
     """Test that trace ID is included in response headers."""
-    app = create_app([simple_router])
+    app = create_app(routers=[simple_router])
     client = TestClient(app)
 
     response = client.get("/test")
@@ -99,30 +108,11 @@ class TestCreateAppWithSettings:
 
     def test_create_app_with_settings_basic(self, simple_router):
         """Test app creation with BootstrapSettings."""
-        settings = BootstrapSettings(
-            title="Settings API",
-            version="2.0.0",
-        )
-        app = create_app([simple_router], settings=settings)
+        settings = BootstrapSettings(title="Settings API", version="2.0.0")
+        app = create_app(routers=[simple_router], settings=settings)
 
         assert app.title == "Settings API"
         assert app.version == "2.0.0"
-
-    def test_create_app_with_settings_overrides_params(self, simple_router):
-        """Settings should override individual parameters."""
-        settings = BootstrapSettings(
-            title="From Settings",
-            version="3.0.0",
-        )
-        app = create_app(
-            [simple_router],
-            title="From Param",
-            version="1.0.0",
-            settings=settings,
-        )
-
-        assert app.title == "From Settings"
-        assert app.version == "3.0.0"
 
     def test_create_app_with_settings_stage(self, simple_router):
         """Test app creation with different stages via settings."""
@@ -131,7 +121,7 @@ class TestCreateAppWithSettings:
             stage=Stage.PROD,
             cors=CORSSettings(origins=["https://example.com"]),
         )
-        app = create_app([simple_router], settings=settings)
+        app = create_app(routers=[simple_router], settings=settings)
         client = TestClient(app)
 
         response = client.get("/test")
@@ -139,10 +129,8 @@ class TestCreateAppWithSettings:
 
     def test_create_app_with_settings_health_check(self, simple_router):
         """Test custom health check endpoint via settings."""
-        settings = BootstrapSettings(
-            health_check=HealthCheckSettings(endpoint="/health"),
-        )
-        app = create_app([simple_router], settings=settings)
+        settings = BootstrapSettings(health_check=HealthCheckSettings(endpoint="/health"))
+        app = create_app(routers=[simple_router], settings=settings)
         client = TestClient(app)
 
         response = client.get("/health")
@@ -151,28 +139,34 @@ class TestCreateAppWithSettings:
 
     def test_create_app_with_settings_graceful_shutdown(self, simple_router):
         """Test graceful shutdown configuration via settings."""
-        settings = BootstrapSettings(
-            graceful_shutdown=GracefulShutdownSettings(timeout=5),
-        )
-        app = create_app([simple_router], settings=settings)
-
+        settings = BootstrapSettings(graceful_shutdown=GracefulShutdownSettings(timeout=5))
+        app = create_app(routers=[simple_router], settings=settings)
         assert app is not None
 
-    def test_create_app_legacy_params_still_work(self, simple_router):
-        """Test that legacy parameter-based configuration still works."""
-        app = create_app(
-            [simple_router],
-            title="Legacy API",
-            version="1.0.0",
-            stage="dev",
-            health_check_api="/healthz",
-            cors_origins=["*"],
-        )
+    def test_create_app_with_prefix_url(self, simple_router):
+        """Test API prefix URL configuration via settings."""
+        settings = BootstrapSettings(prefix_url="/api/v2")
+        app = create_app(routers=[simple_router], settings=settings)
         client = TestClient(app)
 
-        assert app.title == "Legacy API"
-        response = client.get("/healthz")
+        response = client.get("/api/v2/test")
         assert response.status_code == 200
+
+    def test_create_app_with_docs_settings(self, simple_router):
+        """Test docs configuration via settings."""
+        settings = BootstrapSettings(docs=DocsSettings(enabled=True, prefix_url="/api"))
+        app = create_app(routers=[simple_router], settings=settings)
+        client = TestClient(app)
+
+        response = client.get("/api/docs")
+        assert response.status_code == 200
+
+    def test_create_app_with_swagger_oauth(self, simple_router):
+        """Test Swagger OAuth configuration via settings."""
+        oauth_config = {"clientId": "test-client", "usePkceWithAuthorizationCodeGrant": True}
+        settings = BootstrapSettings(docs=DocsSettings(swagger_oauth=oauth_config))
+        app = create_app(routers=[simple_router], settings=settings)
+        assert app is not None
 
 
 class TestLoggingAPIRouteHTTPException:
@@ -183,7 +177,7 @@ class TestLoggingAPIRouteHTTPException:
         async def protected():
             raise HTTPException(status_code=401, detail="Not authenticated")
 
-        app = create_app([router])
+        app = create_app(routers=[router])
 
         @app.exception_handler(HTTPException)
         async def custom_handler(request: Request, exc: HTTPException):
@@ -204,7 +198,7 @@ class TestLoggingAPIRouteHTTPException:
         async def error_endpoint():
             raise ValueError("Something went wrong")
 
-        app = create_app([router])
+        app = create_app(routers=[router])
         client = TestClient(app)
 
         response = client.get("/error")
@@ -228,7 +222,7 @@ class TestCustomExceptionHandlers:
             return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
         app = create_app(
-            [router],
+            routers=[router],
             exception_handlers={HTTPException: custom_401_handler},
         )
 
@@ -249,7 +243,7 @@ class TestCustomExceptionHandlers:
             return RedirectResponse(url="/login", status_code=302)
 
         app = create_app(
-            [router],
+            routers=[router],
             exception_handlers={HTTPException: custom_401_handler},
         )
         client = TestClient(app)

@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from fastapi.testclient import TestClient
 
 from fastapi_bootstrap import create_app
+from fastapi_bootstrap.config import BootstrapSettings, Stage
 from fastapi_bootstrap.exception import (
     BadRequestHeaderError,
     ErrorInfo,
@@ -34,7 +35,8 @@ def error_router():
 
 def test_bad_request_header_error(error_router):
     """Test BadRequestHeaderError handling."""
-    app = create_app([error_router], stage="dev")
+    settings = BootstrapSettings(stage=Stage.DEV)
+    app = create_app(routers=[error_router], settings=settings)
     client = TestClient(app)
 
     response = client.get("/bad-header")
@@ -44,7 +46,8 @@ def test_bad_request_header_error(error_router):
 
 def test_invalid_token_error(error_router):
     """Test InvalidAccessTokenError handling."""
-    app = create_app([error_router], stage="dev")
+    settings = BootstrapSettings(stage=Stage.DEV)
+    app = create_app(routers=[error_router], settings=settings)
     client = TestClient(app)
 
     response = client.get("/invalid-token")
@@ -54,7 +57,8 @@ def test_invalid_token_error(error_router):
 
 def test_server_error(error_router):
     """Test RuntimeError handling."""
-    app = create_app([error_router], stage="dev")
+    settings = BootstrapSettings(stage=Stage.DEV)
+    app = create_app(routers=[error_router], settings=settings)
     client = TestClient(app)
 
     response = client.get("/server-error")

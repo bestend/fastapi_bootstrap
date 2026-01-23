@@ -6,6 +6,7 @@ import pytest
 from fastapi import APIRouter
 
 from fastapi_bootstrap import create_app
+from fastapi_bootstrap.config import BootstrapSettings, GracefulShutdownSettings
 
 
 @pytest.mark.asyncio
@@ -17,17 +18,15 @@ async def test_graceful_shutdown_zero():
     def test():
         return {"ok": True}
 
-    app = create_app([router], graceful_timeout=0)
+    settings = BootstrapSettings(graceful_shutdown=GracefulShutdownSettings(timeout=0))
+    app = create_app(routers=[router], settings=settings)
 
-    # Simulate shutdown
     start = time.time()
 
     async with app.router.lifespan_context(app):
-        pass  # This triggers startup and shutdown
+        pass
 
     elapsed = time.time() - start
-
-    # Should be very fast (< 0.5 seconds)
     assert elapsed < 0.5, f"Shutdown took {elapsed:.2f}s, expected < 0.5s"
 
 
@@ -41,7 +40,8 @@ async def test_graceful_shutdown_with_delay():
         return {"ok": True}
 
     timeout = 2
-    app = create_app([router], graceful_timeout=timeout)
+    settings = BootstrapSettings(graceful_shutdown=GracefulShutdownSettings(timeout=timeout))
+    app = create_app(routers=[router], settings=settings)
 
     start = time.time()
 
@@ -49,8 +49,6 @@ async def test_graceful_shutdown_with_delay():
         pass
 
     elapsed = time.time() - start
-
-    # Should wait for the graceful timeout
     assert elapsed >= timeout, f"Expected >= {timeout}s, got {elapsed:.2f}s"
     assert elapsed < timeout + 0.5, f"Too slow: {elapsed:.2f}s"
 
@@ -73,9 +71,10 @@ async def test_startup_shutdown_with_app_parameter():
     async def shutdown_with_app(app):
         shutdown_called.append(app)
 
+    settings = BootstrapSettings(graceful_shutdown=GracefulShutdownSettings(timeout=0))
     app = create_app(
-        [router],
-        graceful_timeout=0,
+        routers=[router],
+        settings=settings,
         startup_coroutines=[startup_with_app],
         shutdown_coroutines=[shutdown_with_app],
     )
@@ -83,7 +82,6 @@ async def test_startup_shutdown_with_app_parameter():
     async with app.router.lifespan_context(app):
         pass
 
-    # Verify the coroutines were called with the app
     assert len(startup_called) == 1
     assert len(shutdown_called) == 1
     assert startup_called[0] is app
@@ -108,9 +106,10 @@ async def test_startup_shutdown_without_app_parameter():
     async def shutdown_no_param():
         shutdown_called.append(True)
 
+    settings = BootstrapSettings(graceful_shutdown=GracefulShutdownSettings(timeout=0))
     app = create_app(
-        [router],
-        graceful_timeout=0,
+        routers=[router],
+        settings=settings,
         startup_coroutines=[startup_no_param],
         shutdown_coroutines=[shutdown_no_param],
     )
@@ -118,7 +117,6 @@ async def test_startup_shutdown_without_app_parameter():
     async with app.router.lifespan_context(app):
         pass
 
-    # Verify the coroutines were called
     assert len(startup_called) == 1
     assert len(shutdown_called) == 1
     assert startup_called[0] is True
@@ -148,9 +146,10 @@ async def test_mixed_startup_shutdown_coroutines():
     async def shutdown_no_param():
         calls.append(("shutdown_no_param", None))
 
+    settings = BootstrapSettings(graceful_shutdown=GracefulShutdownSettings(timeout=0))
     app = create_app(
-        [router],
-        graceful_timeout=0,
+        routers=[router],
+        settings=settings,
         startup_coroutines=[startup_with_app, startup_no_param],
         shutdown_coroutines=[shutdown_with_app, shutdown_no_param],
     )
@@ -158,7 +157,6 @@ async def test_mixed_startup_shutdown_coroutines():
     async with app.router.lifespan_context(app):
         pass
 
-    # Verify all coroutines were called in order
     assert len(calls) == 4
     assert calls[0] == ("startup_with_app", app)
     assert calls[1] == ("startup_no_param", None)

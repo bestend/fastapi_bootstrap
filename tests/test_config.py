@@ -8,6 +8,7 @@ import pytest
 from fastapi_bootstrap.config import (
     BootstrapSettings,
     CORSSettings,
+    DocsSettings,
     LogFormat,
     LoggingSettings,
     SecuritySettings,
@@ -76,6 +77,47 @@ class TestSecuritySettings:
         assert settings.enable_security_headers is True
         assert settings.hsts_max_age == 31536000
         assert settings.x_frame_options == "DENY"
+
+    def test_add_external_basic_auth_default(self):
+        """add_external_basic_auth should default to False."""
+        settings = SecuritySettings()
+        assert settings.add_external_basic_auth is False
+
+    def test_add_external_basic_auth_enabled(self):
+        """add_external_basic_auth can be enabled."""
+        settings = SecuritySettings(add_external_basic_auth=True)
+        assert settings.add_external_basic_auth is True
+
+
+class TestDocsSettings:
+    """Tests for DocsSettings."""
+
+    def test_default_values(self):
+        """Default docs settings should enable docs."""
+        settings = DocsSettings()
+        assert settings.enabled is True
+        assert settings.prefix_url == ""
+        assert settings.swagger_oauth is None
+
+    def test_docs_disabled(self):
+        """Docs can be disabled."""
+        settings = DocsSettings(enabled=False)
+        assert settings.enabled is False
+
+    def test_custom_prefix_url(self):
+        """Custom prefix_url should be set correctly."""
+        settings = DocsSettings(prefix_url="/api/v1")
+        assert settings.prefix_url == "/api/v1"
+
+    def test_swagger_oauth_config(self):
+        """Swagger OAuth config should be set correctly."""
+        oauth_config = {
+            "clientId": "my-client",
+            "usePkceWithAuthorizationCodeGrant": True,
+        }
+        settings = DocsSettings(swagger_oauth=oauth_config)
+        assert settings.swagger_oauth == oauth_config
+        assert settings.swagger_oauth["clientId"] == "my-client"
 
 
 class TestBootstrapSettings:

@@ -161,13 +161,13 @@ class TestTruncateStringsImmutability:
             "outer": {"inner": "y" * 3000},
             "short": "hello",
         }
-        inner_original = original["outer"]["inner"]
+        inner_original = original["outer"]["inner"]  # type: ignore[index]
 
         result = truncate_strings_in_structure(original)
 
-        assert original["outer"]["inner"] == inner_original
+        assert original["outer"]["inner"] == inner_original  # type: ignore[index]
         assert result["outer"]["inner"] == "[[truncated]]"
-        assert original["outer"]["inner"] != result["outer"]["inner"]
+        assert original["outer"]["inner"] != result["outer"]["inner"]  # type: ignore[index]
 
     def test_list_not_mutated(self):
         """Original list should not be modified."""
@@ -206,7 +206,7 @@ class TestTruncateStringsImmutability:
         assert result["list"][0] == "[[truncated]]"
         assert result["nested"]["deep"]["value"] == "[[truncated]]"
         assert original["list"][0] == "x" * 3000
-        assert original["nested"]["deep"]["value"] == "y" * 3000
+        assert original["nested"]["deep"]["value"] == "y" * 3000  # type: ignore[index]
 
     def test_result_is_different_object(self):
         """Result should be a different object from input."""

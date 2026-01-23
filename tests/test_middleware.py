@@ -17,7 +17,7 @@ class TestSecurityHeadersMiddleware:
     def test_adds_security_headers_in_prod(self):
         """Security headers should be added in production (except HSTS on HTTP)."""
         app = FastAPI()
-        app.add_middleware(SecurityHeadersMiddleware, stage="prod")
+        app.add_middleware(SecurityHeadersMiddleware, stage="prod")  # type: ignore[arg-type]
 
         @app.get("/test")
         async def test_endpoint():
@@ -37,7 +37,7 @@ class TestSecurityHeadersMiddleware:
     def test_adds_hsts_on_https(self):
         """HSTS header should be added when X-Forwarded-Proto is https."""
         app = FastAPI()
-        app.add_middleware(SecurityHeadersMiddleware, stage="prod")
+        app.add_middleware(SecurityHeadersMiddleware, stage="prod")  # type: ignore[arg-type]
 
         @app.get("/test")
         async def test_endpoint():
@@ -53,7 +53,7 @@ class TestSecurityHeadersMiddleware:
     def test_skips_headers_in_dev_by_default(self):
         """Security headers should be skipped in dev by default."""
         app = FastAPI()
-        app.add_middleware(SecurityHeadersMiddleware, stage="dev", enable_in_dev=False)
+        app.add_middleware(SecurityHeadersMiddleware, stage="dev", enable_in_dev=False)  # type: ignore[arg-type]
 
         @app.get("/test")
         async def test_endpoint():
@@ -68,7 +68,7 @@ class TestSecurityHeadersMiddleware:
     def test_enables_headers_in_dev_when_configured(self):
         """Security headers should be enabled in dev when configured."""
         app = FastAPI()
-        app.add_middleware(SecurityHeadersMiddleware, stage="dev", enable_in_dev=True)
+        app.add_middleware(SecurityHeadersMiddleware, stage="dev", enable_in_dev=True)  # type: ignore[arg-type]
 
         @app.get("/test")
         async def test_endpoint():
@@ -84,7 +84,7 @@ class TestSecurityHeadersMiddleware:
         """Custom CSP should be applied."""
         app = FastAPI()
         app.add_middleware(
-            SecurityHeadersMiddleware,
+            SecurityHeadersMiddleware,  # type: ignore[arg-type]
             stage="prod",
             content_security_policy="default-src 'self'; script-src 'unsafe-inline'",
         )
@@ -103,7 +103,7 @@ class TestSecurityHeadersMiddleware:
         """HSTS should be configurable."""
         app = FastAPI()
         app.add_middleware(
-            SecurityHeadersMiddleware,
+            SecurityHeadersMiddleware,  # type: ignore[arg-type]
             stage="prod",
             hsts_max_age=3600,
             hsts_include_subdomains=True,
@@ -130,7 +130,7 @@ class TestRequestIDMiddleware:
     def test_generates_request_id(self):
         """Middleware should generate a request ID."""
         app = FastAPI()
-        app.add_middleware(RequestIDMiddleware)
+        app.add_middleware(RequestIDMiddleware)  # type: ignore[arg-type]
 
         @app.get("/test")
         async def test_endpoint(request: Request):
@@ -146,7 +146,7 @@ class TestRequestIDMiddleware:
     def test_uses_existing_request_id(self):
         """Middleware should use existing request ID from header."""
         app = FastAPI()
-        app.add_middleware(RequestIDMiddleware)
+        app.add_middleware(RequestIDMiddleware)  # type: ignore[arg-type]
 
         @app.get("/test")
         async def test_endpoint(request: Request):
@@ -161,7 +161,7 @@ class TestRequestIDMiddleware:
     def test_custom_header_name(self):
         """Middleware should support custom header name."""
         app = FastAPI()
-        app.add_middleware(RequestIDMiddleware, header_name="X-Correlation-ID")
+        app.add_middleware(RequestIDMiddleware, header_name="X-Correlation-ID")  # type: ignore[arg-type]
 
         @app.get("/test")
         async def test_endpoint():
@@ -175,7 +175,7 @@ class TestRequestIDMiddleware:
     def test_custom_generator(self):
         """Middleware should support custom ID generator."""
         app = FastAPI()
-        app.add_middleware(RequestIDMiddleware, generator=lambda: "fixed-id")
+        app.add_middleware(RequestIDMiddleware, generator=lambda: "fixed-id")  # type: ignore[arg-type]
 
         @app.get("/test")
         async def test_endpoint():
@@ -193,7 +193,7 @@ class TestRequestTimingMiddleware:
     def test_adds_timing_header(self):
         """Middleware should add timing header."""
         app = FastAPI()
-        app.add_middleware(RequestTimingMiddleware)
+        app.add_middleware(RequestTimingMiddleware)  # type: ignore[arg-type]
 
         @app.get("/test")
         async def test_endpoint():
@@ -213,7 +213,7 @@ class TestRequestTimingMiddleware:
     def test_custom_header_name(self):
         """Middleware should support custom header name."""
         app = FastAPI()
-        app.add_middleware(RequestTimingMiddleware, header_name="X-Processing-Time")
+        app.add_middleware(RequestTimingMiddleware, header_name="X-Processing-Time")  # type: ignore[arg-type]
 
         @app.get("/test")
         async def test_endpoint():
@@ -231,7 +231,7 @@ class TestMaxRequestSizeMiddleware:
     def test_allows_small_requests(self):
         """Small requests should be allowed."""
         app = FastAPI()
-        app.add_middleware(MaxRequestSizeMiddleware, max_size=1024)  # 1KB
+        app.add_middleware(MaxRequestSizeMiddleware, max_size=1024)  # type: ignore[arg-type] # 1KB
 
         @app.post("/test")
         async def test_endpoint(request: Request):
@@ -246,7 +246,7 @@ class TestMaxRequestSizeMiddleware:
     def test_rejects_large_requests(self):
         """Large requests should be rejected."""
         app = FastAPI()
-        app.add_middleware(MaxRequestSizeMiddleware, max_size=100)  # 100 bytes
+        app.add_middleware(MaxRequestSizeMiddleware, max_size=100)  # type: ignore[arg-type] # 100 bytes
 
         @app.post("/test")
         async def test_endpoint(request: Request):
@@ -266,7 +266,7 @@ class TestMaxRequestSizeMiddleware:
 
     def test_rejects_large_requests_without_content_length(self):
         app = FastAPI()
-        app.add_middleware(MaxRequestSizeMiddleware, max_size=100)
+        app.add_middleware(MaxRequestSizeMiddleware, max_size=100)  # type: ignore[arg-type]
 
         @app.post("/test")
         async def test_endpoint(request: Request):

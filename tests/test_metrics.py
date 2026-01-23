@@ -149,7 +149,7 @@ class TestMetricsMiddleware:
     def test_middleware_records_requests(self):
         """Middleware should record request metrics."""
         app = FastAPI()
-        app.add_middleware(MetricsMiddleware, app_name="test")
+        app.add_middleware(MetricsMiddleware, app_name="test")  # type: ignore[arg-type]
 
         @app.get("/test")
         async def test_endpoint():
@@ -170,7 +170,7 @@ class TestMetricsMiddleware:
     def test_middleware_excludes_paths(self):
         """Middleware should exclude configured paths."""
         app = FastAPI()
-        app.add_middleware(MetricsMiddleware, exclude_paths=["/health", "/metrics"])
+        app.add_middleware(MetricsMiddleware, exclude_paths=["/health", "/metrics"])  # type: ignore[arg-type]
 
         @app.get("/health")
         async def health():
@@ -190,7 +190,7 @@ class TestMetricsMiddleware:
 
     def test_middleware_does_not_use_raw_paths_for_unmatched_routes(self):
         app = FastAPI()
-        app.add_middleware(MetricsMiddleware)
+        app.add_middleware(MetricsMiddleware)  # type: ignore[arg-type]
         client = TestClient(app)
 
         client.get("/does-not-exist-1")

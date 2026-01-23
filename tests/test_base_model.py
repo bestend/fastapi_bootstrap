@@ -25,7 +25,7 @@ def test_base_model_forbid_extra():
         name: str
 
     with pytest.raises(ValidationError):
-        TestModel(name="John", extra_field="value")
+        TestModel(name="John", extra_field="value")  # type: ignore[call-arg]
 
 
 def test_base_model_populate_by_name():
@@ -39,7 +39,7 @@ def test_base_model_populate_by_name():
     model1 = TestModel(userName="John")
     assert model1.user_name == "John"
 
-    model2 = TestModel(user_name="Jane")
+    model2 = TestModel(user_name="Jane")  # type: ignore[call-arg]
     assert model2.user_name == "Jane"
 
 
@@ -51,4 +51,4 @@ def test_base_model_validation():
         active: bool
 
     with pytest.raises(ValidationError):
-        TestModel(age="not a number", active=True)
+        TestModel(age="not a number", active=True)  # type: ignore[arg-type]
