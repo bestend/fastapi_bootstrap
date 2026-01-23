@@ -283,7 +283,7 @@ version = "0.0.dev0"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
-    { name = "loguru" },
+    { name = "loguru-kit" },
     { name = "opentelemetry-api" },
     { name = "pydantic" },
     { name = "pyyaml" },
@@ -315,7 +315,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.109.0" },
     { name = "httpx", marker = "extra == 'all'", specifier = ">=0.26.0" },
     { name = "httpx", marker = "extra == 'auth'", specifier = ">=0.26.0" },
-    { name = "loguru", specifier = ">=0.7.2" },
+    { name = "loguru-kit", specifier = ">=0.7.0" },
     { name = "opentelemetry-api", specifier = ">=1.22.0" },
     { name = "pydantic", specifier = ">=2.5.0" },
     { name = "python-jose", extras = ["cryptography"], marker = "extra == 'all'", specifier = ">=3.3.0" },
@@ -413,6 +413,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/3a/05/a1dae3dffd1116099471c643b8924f5aa6524411dc6c63fdae648c4f1aca/loguru-0.7.3.tar.gz", hash = "sha256:19480589e77d47b8d85b2c827ad95d49bf31b0dcde16593892eb51dd18706eb6", size = 63559, upload-time = "2024-12-06T11:20:56.608Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl", hash = "sha256:31a33c10c8e1e10422bfd431aeb5d351c7cf7fa671e3c4df004162264b28220c", size = 61595, upload-time = "2024-12-06T11:20:54.538Z" },
+]
+
+[[package]]
+name = "loguru-kit"
+version = "0.7.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "loguru" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9a/7d/9a303c0cc665464b11db1636b93e6d274a2374054e547cc135995f292701/loguru_kit-0.7.0.tar.gz", hash = "sha256:ee8a77308dc5a1d8b603b0ea4cff906182e2b451e4090890bcb5f8cc5dfcd197", size = 44765, upload-time = "2026-01-23T16:48:38.486Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9c/03/e9205cc015ba0a53a3f838d97e92d121ad6bb3c5ce9bf1ca5ff982d7ef8e/loguru_kit-0.7.0-py3-none-any.whl", hash = "sha256:a97bfd6d88956120c4f69c7e4f5c17a17c9cbe09d41a96fad170068bd28b1e5f", size = 14522, upload-time = "2026-01-23T16:48:37.348Z" },
 ]
 
 [[package]]

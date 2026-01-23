@@ -6,13 +6,11 @@ from fastapi.exceptions import HTTPException
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse, Response
 from fastapi.routing import APIRoute
+from loguru import logger
 from uvicorn.protocols.utils import get_path_with_query_string
 
 from fastapi_bootstrap.exception import generate_error_response
-from fastapi_bootstrap.log import get_logger
 from fastapi_bootstrap.util import get_trace_id
-
-logger = get_logger()
 
 
 def get_client_ip(request: Request) -> str:

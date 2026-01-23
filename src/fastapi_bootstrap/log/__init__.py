@@ -1,22 +1,5 @@
-"""fastapi_bootstrap.log
+"""fastapi_bootstrap.log - Logging utilities powered by loguru-kit."""
 
-로깅 관련 유틸을 제공합니다.
+from .setup import get_logger, setup_logging
 
-주의: import 시점에 loguru Handler 동작을 패치하는 등 부수효과가 있습니다.
-"""
-
-from .setup import (
-    InterceptHandler,
-    get_logger,
-    intercept_standard_logging,
-    setup_logging,
-    truncate_strings_in_structure,
-)
-
-__all__ = [
-    "InterceptHandler",
-    "get_logger",
-    "intercept_standard_logging",
-    "setup_logging",
-    "truncate_strings_in_structure",
-]
+__all__ = ["get_logger", "setup_logging"]

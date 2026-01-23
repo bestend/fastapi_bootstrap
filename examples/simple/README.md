@@ -24,7 +24,7 @@ router = APIRouter(route_class=LoggingAPIRoute)
 
 @router.get("/hello")
 async def hello(name: str = "World"):
-    logger.info("Hello endpoint called", name=name)
+    logger.info(f"Hello endpoint called with name={name}")
     return {"message": f"Hello, {name}!"}
 
 

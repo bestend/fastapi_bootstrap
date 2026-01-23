@@ -230,8 +230,8 @@ def create_app(
         # Suppress default uvicorn/fastapi loggers
         _suppress_uvicorn_loggers()
 
-        # Setup custom logging with FastAPI request/response format
-        setup_logging(use_fastapi_format=True)
+        # Setup custom logging via loguru-kit
+        setup_logging()
 
         # Run user-defined startup coroutines
         for coroutine in startup_coroutines:
