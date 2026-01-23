@@ -47,26 +47,60 @@ router = APIRouter(route_class=LoggingAPIRoute)
 async def hello():
     return {"message": "안녕하세요!"}
 
-app = create_app([router], title="내 API", version="1.0.0")
+# 최소 설정 - 기본값 사용
+app = create_app(routers=[router])
+
+# 설정과 함께
+from fastapi_bootstrap.config import BootstrapSettings
+
+settings = BootstrapSettings(title="내 API", version="1.0.0")
+app = create_app(routers=[router], settings=settings)
 ```
 
 실행: `uvicorn app:app --reload`
 
 ---
 
-## 📖 핵심 컴포넌트
+## ⚙️ 설정
 
-### 애플리케이션 팩토리
+모든 설정은 `BootstrapSettings`를 통해 관리됩니다:
 
 ```python
 from fastapi_bootstrap import create_app
-
-app = create_app(
-    routers=[router],
-    title="내 API",
-    version="1.0.0"
+from fastapi_bootstrap.config import (
+    BootstrapSettings,
+    CORSSettings,
+    DocsSettings,
+    Stage,
 )
+
+settings = BootstrapSettings(
+    title="내 API",
+    version="1.0.0",
+    stage=Stage.PROD,
+    prefix_url="/api/v1",
+    cors=CORSSettings(origins=["https://myapp.com"]),
+    docs=DocsSettings(enabled=True),
+)
+
+app = create_app(routers=[router], settings=settings)
 ```
+
+### 환경 변수
+
+```bash
+STAGE=prod                    # dev, staging, prod
+APP_TITLE="내 API"
+APP_VERSION="1.0.0"
+API_PREFIX_URL="/api/v1"
+CORS_ORIGINS="https://myapp.com,https://api.myapp.com"
+DOCS_ENABLED=true
+LOG_LEVEL=INFO
+```
+
+---
+
+## 📖 핵심 컴포넌트
 
 ### 로깅
 
@@ -116,6 +150,33 @@ app.include_router(get_metrics_router())  # GET /metrics
 
 ---
 
+## 📚 API 레퍼런스
+
+### create_app()
+
+```python
+def create_app(
+    routers: list[APIRouter],
+    settings: BootstrapSettings | None = None,
+    *,
+    dependencies: list[Any] | None = None,
+    middlewares: list | None = None,
+    startup_coroutines: list[Callable] | None = None,
+    shutdown_coroutines: list[Callable] | None = None,
+) -> FastAPI
+```
+
+| 파라미터 | 설명 |
+|----------|------|
+| `routers` | FastAPI APIRouter 인스턴스 목록 |
+| `settings` | 모든 설정을 담은 BootstrapSettings |
+| `dependencies` | 모든 라우트에 적용할 전역 의존성 |
+| `middlewares` | 커스텀 미들웨어 클래스 목록 |
+| `startup_coroutines` | 시작 시 실행할 비동기 함수 목록 |
+| `shutdown_coroutines` | 종료 시 실행할 비동기 함수 목록 |
+
+---
+
 ## 📚 문서
 
 고급 기능은 [ADVANCED.md](./ADVANCED.md) 참조 (영문):
@@ -126,6 +187,12 @@ app.include_router(get_metrics_router())  # GET /metrics
 - CORS Configuration
 - Health Checks
 - Complete Examples
+
+---
+
+## 🔄 마이그레이션
+
+이전 버전에서 업그레이드하려면 [MIGRATION.md](./MIGRATION.md) 참조.
 
 ---
 

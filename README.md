@@ -31,24 +31,56 @@ router = APIRouter(route_class=LoggingAPIRoute)
 async def hello():
     return {"message": "Hello, World!"}
 
-app = create_app([router], title="My API", version="1.0.0")
+# Minimal - uses defaults
+app = create_app(routers=[router])
+
+# With settings
+from fastapi_bootstrap.config import BootstrapSettings
+
+settings = BootstrapSettings(title="My API", version="1.0.0")
+app = create_app(routers=[router], settings=settings)
 ```
 
 Run with: `uvicorn app:app --reload`
 
-## Core Components
+## Configuration
 
-### Application Factory
+All configuration is done via `BootstrapSettings`:
 
 ```python
 from fastapi_bootstrap import create_app
-
-app = create_app(
-    routers=[router],
-    title="My API",
-    version="1.0.0"
+from fastapi_bootstrap.config import (
+    BootstrapSettings,
+    CORSSettings,
+    DocsSettings,
+    Stage,
 )
+
+settings = BootstrapSettings(
+    title="My API",
+    version="1.0.0",
+    stage=Stage.PROD,
+    prefix_url="/api/v1",
+    cors=CORSSettings(origins=["https://myapp.com"]),
+    docs=DocsSettings(enabled=True),
+)
+
+app = create_app(routers=[router], settings=settings)
 ```
+
+### Environment Variables
+
+```bash
+STAGE=prod                    # dev, staging, prod
+APP_TITLE="My API"
+APP_VERSION="1.0.0"
+API_PREFIX_URL="/api/v1"
+CORS_ORIGINS="https://myapp.com,https://api.myapp.com"
+DOCS_ENABLED=true
+LOG_LEVEL=INFO
+```
+
+## Core Components
 
 ### Logging
 
@@ -96,6 +128,31 @@ app.add_middleware(MetricsMiddleware)
 app.include_router(get_metrics_router())  # GET /metrics
 ```
 
+## API Reference
+
+### create_app()
+
+```python
+def create_app(
+    routers: list[APIRouter],
+    settings: BootstrapSettings | None = None,
+    *,
+    dependencies: list[Any] | None = None,
+    middlewares: list | None = None,
+    startup_coroutines: list[Callable] | None = None,
+    shutdown_coroutines: list[Callable] | None = None,
+) -> FastAPI
+```
+
+| Parameter | Description |
+|-----------|-------------|
+| `routers` | List of FastAPI APIRouter instances |
+| `settings` | BootstrapSettings for all configuration |
+| `dependencies` | Global dependencies for all routes |
+| `middlewares` | Custom middleware classes |
+| `startup_coroutines` | Async functions to run on startup |
+| `shutdown_coroutines` | Async functions to run on shutdown |
+
 ## Documentation
 
 For advanced features, see [ADVANCED.md](./ADVANCED.md):
@@ -106,6 +163,10 @@ For advanced features, see [ADVANCED.md](./ADVANCED.md):
 - CORS Configuration
 - Health Checks
 - Complete Examples
+
+## Migration from v1.x
+
+See [MIGRATION.md](./MIGRATION.md) for upgrading from previous versions.
 
 ## Examples
 

@@ -463,29 +463,102 @@ spec:
 ```python
 def create_app(
     routers: list[APIRouter],
-    title: str = "FastAPI",
-    version: str = "0.1.0",
-    description: str = "",
-    docs_url: str | None = "/docs",
-    openapi_url: str | None = "/openapi.json",
-    lifespan: Callable | None = None,
+    settings: BootstrapSettings | None = None,
+    *,
+    dependencies: list[Any] | None = None,
+    middlewares: list | None = None,
+    startup_coroutines: list[Callable] | None = None,
+    shutdown_coroutines: list[Callable] | None = None,
 ) -> FastAPI:
     """
     Create a FastAPI application with preconfigured features.
     
     Args:
         routers: List of APIRouter instances to include
-        title: API title shown in documentation
-        version: API version
-        description: API description
-        docs_url: Swagger UI path (None to disable)
-        openapi_url: OpenAPI schema path (None to disable)
-        lifespan: Async context manager for startup/shutdown
+        settings: BootstrapSettings for all configuration (uses defaults if None)
+        dependencies: Global dependencies applied to all routes
+        middlewares: Custom middleware classes to add
+        startup_coroutines: Async functions to run on startup
+        shutdown_coroutines: Async functions to run on shutdown
     
     Returns:
         Configured FastAPI application
     """
 ```
+
+### BootstrapSettings
+
+```python
+from fastapi_bootstrap.config import (
+    BootstrapSettings,
+    CORSSettings,
+    DocsSettings,
+    GracefulShutdownSettings,
+    HealthCheckSettings,
+    LoggingSettings,
+    MetricsSettings,
+    RateLimitSettings,
+    SecuritySettings,
+    Stage,
+)
+
+settings = BootstrapSettings(
+    # Application metadata
+    title="My API",
+    version="1.0.0",
+    description="API description",
+    
+    # Environment
+    stage=Stage.PROD,  # dev, staging, prod
+    prefix_url="/api/v1",
+    
+    # Sub-configurations
+    logging=LoggingSettings(level="INFO"),
+    cors=CORSSettings(origins=["https://myapp.com"]),
+    security=SecuritySettings(add_external_basic_auth=True),
+    rate_limit=RateLimitSettings(enabled=True),
+    metrics=MetricsSettings(enabled=True),
+    health_check=HealthCheckSettings(endpoint="/health"),
+    graceful_shutdown=GracefulShutdownSettings(timeout=30),
+    docs=DocsSettings(enabled=True, swagger_oauth={...}),
+)
+```
+
+### Settings Reference
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `title` | `str` | `"FastAPI Application"` | API title |
+| `version` | `str` | `"0.1.0"` | API version |
+| `description` | `str` | `""` | API description |
+| `stage` | `Stage` | `Stage.DEV` | Environment stage |
+| `prefix_url` | `str` | `""` | URL prefix for all routes |
+
+### CORSSettings
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `origins` | `list[str]` | `[]` | Allowed origins |
+| `allow_credentials` | `bool` | `True` | Allow credentials |
+| `allow_methods` | `list[str]` | `["GET", "POST", ...]` | Allowed methods |
+| `allow_headers` | `list[str]` | `["*"]` | Allowed headers |
+
+### DocsSettings
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | `bool` | `True` | Enable docs endpoints |
+| `prefix_url` | `str` | `""` | URL prefix for docs |
+| `swagger_oauth` | `dict \| None` | `None` | OAuth config for Swagger UI |
+
+### SecuritySettings
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enable_security_headers` | `bool` | `True` | Enable security headers |
+| `add_external_basic_auth` | `bool` | `False` | Add bearer auth to OpenAPI |
+| `hsts_max_age` | `int` | `31536000` | HSTS max-age |
+| `max_request_size` | `int` | `10MB` | Max request body size |
 
 ### LoggingAPIRoute
 
