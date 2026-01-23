@@ -23,6 +23,8 @@ app = create_app(routers=[router], settings=settings)
 ```
 """
 
+__version__ = "0.0.dev"  # Auto-updated by GitHub Actions when tag is pushed
+
 from .base import create_app
 from .log import get_logger
 from .logging_api_route import LoggingAPIRoute
